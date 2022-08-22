@@ -101,10 +101,10 @@ echo Killing all instances and installing current build
 
 pkill -u "$(whoami)" -x algod || true
 
-if ! ${NO_BUILD} ; then
-    ./scripts/local_install.sh -c ${CHANNEL} -p ${BINDIR} -d ${DATADIR}
-    export PATH=${BINDIR}:${PATH}
-fi
+# if ! ${NO_BUILD} ; then
+#    ./scripts/local_install.sh -c ${CHANNEL} -p ${BINDIR} -d ${DATADIR}
+#    export PATH=${BINDIR}:${PATH}
+# fi
 
 # check our install
 algod -v
