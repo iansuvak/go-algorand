@@ -18,9 +18,12 @@ package agreement
 
 // A proposalTable stores proposals which need to be authenticated
 // after their prior votes have been processed.
+//msgp:shim int as:uint64 using:uint64/int
 type proposalTable struct {
-	Pending     map[int]*messageEvent
-	PendingNext int
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	Pending     map[int]*messageEvent `codec:"p,allocbound=-"`
+	PendingNext int                   `codec:"pn"`
 }
 
 // push adds a proposal to the proposalTable.

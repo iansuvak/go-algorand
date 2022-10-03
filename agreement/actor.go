@@ -64,8 +64,9 @@ type actorContract interface {
 // A checkedActor wraps an actor, checking its contract on each call.
 //
 type checkedActor struct {
-	actor
-	actorContract
+	_struct       struct{} `codec:",omitempty,omitemptyarray"`
+	actor         `codec:"a"`
+	actorContract `codec:"ac"`
 
 	//   a   []actor
 	//   in  []event

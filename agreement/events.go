@@ -43,8 +43,10 @@ type event interface {
 // A ConsensusVersionView is a view of the consensus version as read from a
 // LedgerReader, associated with some round.
 type ConsensusVersionView struct {
-	Err     serializableError
-	Version protocol.ConsensusVersion
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	Err     serializableError         `codec:"err"`
+	Version protocol.ConsensusVersion `codec:"v"`
 }
 
 // An externalEvent represents an event delivered to the top-level state machine.
@@ -255,28 +257,30 @@ func (e emptyEvent) AttachConsensusVersion(v ConsensusVersionView) externalEvent
 }
 
 type messageEvent struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
 	// {vote,bundle,payload}{Present,Verified}
 	T eventType
 
 	// Input represents the message itself.
-	Input message
+	Input message `codec:"msg"`
 
 	// Err is set if cryptographic verification was attempted and failed for
 	// Input.
-	Err serializableError
+	Err serializableError `codec:"err"`
 	// TaskIndex is optionally set to track a message as it is processed
 	// through cryptographic verification.
-	TaskIndex int
+	TaskIndex int `codec:"tidx"`
 
 	// Tail is an optionally-set field which specifies an unauthenticated
 	// proposal which should be processed after Input is processed.  Tail is
 	// used to schedule processing proposal payloads after a matching
 	// proposal-vote.
-	Tail *messageEvent
+	Tail *messageEvent `codec:"tail"`
 	// Tail *unauthenticatedProposal
 
 	// whether the corresponding request was cancelled
-	Cancelled bool
+	Cancelled bool `codec:"c"`
 
 	Proto ConsensusVersionView
 }
@@ -314,18 +318,22 @@ func (e messageEvent) AttachConsensusVersion(v ConsensusVersionView) externalEve
 // freshnessData is bundled with filterableMessageEvent
 // to allow for delegated freshness computation
 type freshnessData struct {
-	PlayerRound          round
-	PlayerPeriod         period
-	PlayerStep           step
-	PlayerLastConcluding step
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	PlayerRound          round  `codec:"pr"`
+	PlayerPeriod         period `codec:"pp"`
+	PlayerStep           step   `codec:"ps"`
+	PlayerLastConcluding step   `codec:"plc"`
 }
 
 type filterableMessageEvent struct {
-	messageEvent
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+
+	messageEvent `codec:"me"`
 
 	// bundle-in player data for freshness computation
 	// we may want to rethink the SM structure here to avoid passing around state
-	FreshnessData freshnessData
+	FreshnessData freshnessData `codec:"fd"`
 }
 
 type roundInterruptionEvent struct {

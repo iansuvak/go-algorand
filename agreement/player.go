@@ -26,27 +26,28 @@ import (
 // The player implements the top-level state machine functionality of the
 // agreement protocol.
 type player struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
 	// Round, Period, and Step hold the current round, period, and step of
 	// the player state machine.
-	Round  round
-	Period period
-	Step   step
+	Round  round  `codec:"r"`
+	Period period `codec:"p"`
+	Step   step   `codec:"s"`
 
 	// LastConcluding holds the largest step reached in the last period.  As
 	// described in the spec, it affects the propagation of next-vote
 	// messages.
-	LastConcluding step
+	LastConcluding step `codec:"lc"`
 
 	// Deadline contains the time of the next timeout expected by the player
 	// state machine (relevant to the start of the current period).
-	Deadline time.Duration
+	Deadline time.Duration `codec:"dl"`
 	// Napping is set when the player is expecting a random timeout (i.e.,
 	// to determine when the player chooses to send a next-vote).
-	Napping bool
+	Napping bool `codec:"n"`
 
 	// FastRecoveryDeadline contains the next timeout expected for fast
 	// partition recovery.
-	FastRecoveryDeadline time.Duration
+	FastRecoveryDeadline time.Duration `codec:"frd"`
 
 	// Pending holds the player's proposalTable, which stores proposals that
 	// must be verified after some vote has been verified.

@@ -26,7 +26,7 @@ import (
 )
 
 //go:generate stringer -type=actionType
-//msgp:ignore actionType
+//msgp:shim actionType as:uint64 using:uint64/actionType
 type actionType int
 
 const (
@@ -34,6 +34,7 @@ const (
 
 	// network
 	ignore
+
 	broadcast
 	relay
 	disconnect
@@ -310,13 +311,14 @@ func (a rezeroAction) do(ctx context.Context, s *Service) {
 }
 
 type pseudonodeAction struct {
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
 	// assemble, repropose, attest
-	T actionType
+	T actionType `codec:"at"`
 
-	Round    round
-	Period   period
-	Step     step
-	Proposal proposalValue
+	Round    round         `codec:"r"`
+	Period   period        `codec:"p"`
+	Step     step          `codec:"s"`
+	Proposal proposalValue `codec:"pv"`
 }
 
 func (a pseudonodeAction) t() actionType {
@@ -388,7 +390,7 @@ func (a pseudonodeAction) do(ctx context.Context, s *Service) {
 		case nil:
 			// no error.
 			persistCompleteEvents := s.persistState(persistStateDone)
-			// we want to place there two one after the other. That way, the second would not get executed up until the first one is complete.
+			// we want to place these two one after the other. That way, the second would not get executed up until the first one is complete.
 			s.demux.prioritize(persistCompleteEvents)
 			s.demux.prioritize(voteEvents)
 		default:
@@ -476,11 +478,12 @@ func zeroAction(t actionType) action {
 }
 
 type checkpointAction struct {
-	Round  round
-	Period period
-	Step   step
-	Err    serializableError
-	done   chan error // an output channel to let the pseudonode that we're done processing. We don't want to serialize that, since it's not needed in recovery/autopsy
+	_struct struct{}          `codec:",omitempty,omitemptyarray"`
+	Round   round             `codec:"r"`
+	Period  period            `codec:"p"`
+	Step    step              `codec:"s"`
+	Err     serializableError `codec:"err"`
+	done    chan error        // an output channel to let the pseudonode that we're done processing. We don't want to serialize that, since it's not needed in recovery/autopsy
 }
 
 func (c checkpointAction) t() actionType {

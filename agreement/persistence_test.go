@@ -45,7 +45,7 @@ func TestAgreementSerialization(t *testing.T) {
 	t0 := timers.MakeMonotonicClock(time.Date(2000, 0, 0, 0, 0, 0, 0, time.UTC))
 	log := makeServiceLogger(logging.Base())
 	clock2, router2, status2, a2, err := decode(encodedBytes, t0, log)
-	require.NoError(t, err)
+	require.Error(t, err)
 	require.Equalf(t, clock, clock2, "Clock wasn't serialized/deserialized correctly")
 	require.Equalf(t, router, router2, "Router wasn't serialized/deserialized correctly")
 	require.Equalf(t, status, status2, "Status wasn't serialized/deserialized correctly")

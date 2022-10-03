@@ -33,10 +33,13 @@ import (
 
 // diskState represents the state required by the agreement protocol to be persistent.
 type diskState struct {
-	Router, Player, Clock []byte
+	_struct struct{} `codec:",omitempty,omitemptyarray"`
+	Router  []byte   `codec:"r"`
+	Player  []byte   `codec:"p"`
+	Clock   []byte   `codec:"c"`
 
-	ActionTypes []actionType
-	Actions     [][]byte
+	ActionTypes []actionType `codec:"ats,allocbound=-"`
+	Actions     [][]byte     `codec:"as,allocbound=-"`
 }
 
 func persistent(as []action) bool {
