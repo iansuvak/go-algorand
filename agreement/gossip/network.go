@@ -48,6 +48,22 @@ type messageMetadata struct {
 	raw network.IncomingMessage
 }
 
+func (md *messageMetadata) MsgIsZero() bool {
+	return true
+}
+
+func (md *messageMetadata) Msgsize() int {
+	return 0
+}
+
+func (md *messageMetadata) MarshalMsg(b []byte) []byte {
+	return nil
+}
+
+func (md *messageMetadata) UnmarshalMsg(b []byte) ([]byte, error) {
+	return b, nil
+}
+
 // networkImpl wraps network.GossipNode to provide a compatible interface with agreement.
 type networkImpl struct {
 	voteCh     chan agreement.Message

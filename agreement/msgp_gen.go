@@ -1505,8 +1505,8 @@ func (z *bundle) MsgIsZero() bool {
 func (z *bundleFuture) MarshalMsg(b []byte) (o []byte) {
 	o = msgp.Require(b, z.Msgsize())
 	// omitempty: check for empty values
-	zb0001Len := uint32(8)
-	var zb0001Mask uint16 /* 11 bits */
+	zb0001Len := uint32(9)
+	var zb0001Mask uint16 /* 12 bits */
 	if (*z).message.Bundle.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x1
@@ -1515,29 +1515,33 @@ func (z *bundleFuture) MarshalMsg(b []byte) (o []byte) {
 		zb0001Len--
 		zb0001Mask |= 0x2
 	}
-	if (*z).message.Proposal.MsgIsZero() {
+	if (*z).message.MessageHandle.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x4
 	}
-	if (*z).message.Tag.MsgIsZero() {
+	if (*z).message.Proposal.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x8
 	}
-	if (*z).message.UnauthenticatedBundle.MsgIsZero() {
+	if (*z).message.Tag.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x10
 	}
-	if (*z).message.UnauthenticatedProposal.MsgIsZero() {
+	if (*z).message.UnauthenticatedBundle.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x20
 	}
-	if (*z).message.UnauthenticatedVote.MsgIsZero() {
+	if (*z).message.UnauthenticatedProposal.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x40
 	}
-	if (*z).message.Vote.MsgIsZero() {
+	if (*z).message.UnauthenticatedVote.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x80
+	}
+	if (*z).message.Vote.MsgIsZero() {
+		zb0001Len--
+		zb0001Mask |= 0x100
 	}
 	// variable map header, size zb0001Len
 	o = append(o, 0x80|uint8(zb0001Len))
@@ -1575,31 +1579,36 @@ func (z *bundleFuture) MarshalMsg(b []byte) (o []byte) {
 			}
 		}
 		if (zb0001Mask & 0x4) == 0 { // if not empty
+			// string "MessageHandle"
+			o = append(o, 0xad, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65)
+			o = (*z).message.MessageHandle.MarshalMsg(o)
+		}
+		if (zb0001Mask & 0x8) == 0 { // if not empty
 			// string "Proposal"
 			o = append(o, 0xa8, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c)
 			o = (*z).message.Proposal.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x8) == 0 { // if not empty
+		if (zb0001Mask & 0x10) == 0 { // if not empty
 			// string "Tag"
 			o = append(o, 0xa3, 0x54, 0x61, 0x67)
 			o = (*z).message.Tag.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x10) == 0 { // if not empty
+		if (zb0001Mask & 0x20) == 0 { // if not empty
 			// string "UnauthenticatedBundle"
 			o = append(o, 0xb5, 0x55, 0x6e, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65)
 			o = (*z).message.UnauthenticatedBundle.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x20) == 0 { // if not empty
+		if (zb0001Mask & 0x40) == 0 { // if not empty
 			// string "UnauthenticatedProposal"
 			o = append(o, 0xb7, 0x55, 0x6e, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c)
 			o = (*z).message.UnauthenticatedProposal.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x40) == 0 { // if not empty
+		if (zb0001Mask & 0x80) == 0 { // if not empty
 			// string "UnauthenticatedVote"
 			o = append(o, 0xb3, 0x55, 0x6e, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x56, 0x6f, 0x74, 0x65)
 			o = (*z).message.UnauthenticatedVote.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x80) == 0 { // if not empty
+		if (zb0001Mask & 0x100) == 0 { // if not empty
 			// string "Vote"
 			o = append(o, 0xa4, 0x56, 0x6f, 0x74, 0x65)
 			o = (*z).message.Vote.MarshalMsg(o)
@@ -1625,6 +1634,14 @@ func (z *bundleFuture) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		if err != nil {
 			err = msgp.WrapError(err)
 			return
+		}
+		if zb0001 > 0 {
+			zb0001--
+			bts, err = (*z).message.MessageHandle.UnmarshalMsg(bts)
+			if err != nil {
+				err = msgp.WrapError(err, "struct-from-array", "MessageHandle")
+				return
+			}
 		}
 		if zb0001 > 0 {
 			zb0001--
@@ -1777,6 +1794,12 @@ func (z *bundleFuture) UnmarshalMsg(bts []byte) (o []byte, err error) {
 				return
 			}
 			switch string(field) {
+			case "MessageHandle":
+				bts, err = (*z).message.MessageHandle.UnmarshalMsg(bts)
+				if err != nil {
+					err = msgp.WrapError(err, "MessageHandle")
+					return
+				}
 			case "Tag":
 				bts, err = (*z).message.Tag.UnmarshalMsg(bts)
 				if err != nil {
@@ -1909,13 +1932,13 @@ func (_ *bundleFuture) CanUnmarshalMsg(z interface{}) bool {
 
 // Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
 func (z *bundleFuture) Msgsize() (s int) {
-	s = 1 + 4 + (*z).message.Tag.Msgsize() + 5 + (*z).message.Vote.Msgsize() + 9 + (*z).message.Proposal.Msgsize() + 7 + (*z).message.Bundle.Msgsize() + 20 + (*z).message.UnauthenticatedVote.Msgsize() + 24 + (*z).message.UnauthenticatedProposal.Msgsize() + 22 + (*z).message.UnauthenticatedBundle.Msgsize() + 16 + 1 + 5 + (*z).message.CompoundMessage.Vote.Msgsize() + 9 + (*z).message.CompoundMessage.Proposal.Msgsize()
+	s = 1 + 14 + (*z).message.MessageHandle.Msgsize() + 4 + (*z).message.Tag.Msgsize() + 5 + (*z).message.Vote.Msgsize() + 9 + (*z).message.Proposal.Msgsize() + 7 + (*z).message.Bundle.Msgsize() + 20 + (*z).message.UnauthenticatedVote.Msgsize() + 24 + (*z).message.UnauthenticatedProposal.Msgsize() + 22 + (*z).message.UnauthenticatedBundle.Msgsize() + 16 + 1 + 5 + (*z).message.CompoundMessage.Vote.Msgsize() + 9 + (*z).message.CompoundMessage.Proposal.Msgsize()
 	return
 }
 
 // MsgIsZero returns whether this is a zero value
 func (z *bundleFuture) MsgIsZero() bool {
-	return ((*z).message.Tag.MsgIsZero()) && ((*z).message.Vote.MsgIsZero()) && ((*z).message.Proposal.MsgIsZero()) && ((*z).message.Bundle.MsgIsZero()) && ((*z).message.UnauthenticatedVote.MsgIsZero()) && ((*z).message.UnauthenticatedProposal.MsgIsZero()) && ((*z).message.UnauthenticatedBundle.MsgIsZero()) && (((*z).message.CompoundMessage.Vote.MsgIsZero()) && ((*z).message.CompoundMessage.Proposal.MsgIsZero()))
+	return ((*z).message.MessageHandle.MsgIsZero()) && ((*z).message.Tag.MsgIsZero()) && ((*z).message.Vote.MsgIsZero()) && ((*z).message.Proposal.MsgIsZero()) && ((*z).message.Bundle.MsgIsZero()) && ((*z).message.UnauthenticatedVote.MsgIsZero()) && ((*z).message.UnauthenticatedProposal.MsgIsZero()) && ((*z).message.UnauthenticatedBundle.MsgIsZero()) && (((*z).message.CompoundMessage.Vote.MsgIsZero()) && ((*z).message.CompoundMessage.Proposal.MsgIsZero()))
 }
 
 // MarshalMsg implements msgp.Marshaler
@@ -2051,8 +2074,8 @@ func (z *compoundMessage) MsgIsZero() bool {
 func (z *cryptoBundleRequest) MarshalMsg(b []byte) (o []byte) {
 	o = msgp.Require(b, z.Msgsize())
 	// omitempty: check for empty values
-	zb0001Len := uint32(12)
-	var zb0001Mask uint16 /* 14 bits */
+	zb0001Len := uint32(13)
+	var zb0001Mask uint16 /* 15 bits */
 	if (*z).message.Bundle.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x1
@@ -2065,41 +2088,45 @@ func (z *cryptoBundleRequest) MarshalMsg(b []byte) (o []byte) {
 		zb0001Len--
 		zb0001Mask |= 0x4
 	}
-	if (*z).Period == 0 {
+	if (*z).message.MessageHandle.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x8
 	}
-	if (*z).message.Proposal.MsgIsZero() {
+	if (*z).Period == 0 {
 		zb0001Len--
 		zb0001Mask |= 0x10
 	}
-	if (*z).Round.MsgIsZero() {
+	if (*z).message.Proposal.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x20
 	}
-	if (*z).message.Tag.MsgIsZero() {
+	if (*z).Round.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x40
 	}
-	if (*z).TaskIndex == 0 {
+	if (*z).message.Tag.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x80
 	}
-	if (*z).message.UnauthenticatedBundle.MsgIsZero() {
+	if (*z).TaskIndex == 0 {
 		zb0001Len--
 		zb0001Mask |= 0x100
 	}
-	if (*z).message.UnauthenticatedProposal.MsgIsZero() {
+	if (*z).message.UnauthenticatedBundle.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x200
 	}
-	if (*z).message.UnauthenticatedVote.MsgIsZero() {
+	if (*z).message.UnauthenticatedProposal.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x400
 	}
-	if (*z).message.Vote.MsgIsZero() {
+	if (*z).message.UnauthenticatedVote.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x800
+	}
+	if (*z).message.Vote.MsgIsZero() {
+		zb0001Len--
+		zb0001Mask |= 0x1000
 	}
 	// variable map header, size zb0001Len
 	o = append(o, 0x80|uint8(zb0001Len))
@@ -2142,46 +2169,51 @@ func (z *cryptoBundleRequest) MarshalMsg(b []byte) (o []byte) {
 			}
 		}
 		if (zb0001Mask & 0x8) == 0 { // if not empty
+			// string "MessageHandle"
+			o = append(o, 0xad, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65)
+			o = (*z).message.MessageHandle.MarshalMsg(o)
+		}
+		if (zb0001Mask & 0x10) == 0 { // if not empty
 			// string "Period"
 			o = append(o, 0xa6, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64)
 			o = msgp.AppendUint64(o, uint64((*z).Period))
 		}
-		if (zb0001Mask & 0x10) == 0 { // if not empty
+		if (zb0001Mask & 0x20) == 0 { // if not empty
 			// string "Proposal"
 			o = append(o, 0xa8, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c)
 			o = (*z).message.Proposal.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x20) == 0 { // if not empty
+		if (zb0001Mask & 0x40) == 0 { // if not empty
 			// string "Round"
 			o = append(o, 0xa5, 0x52, 0x6f, 0x75, 0x6e, 0x64)
 			o = (*z).Round.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x40) == 0 { // if not empty
+		if (zb0001Mask & 0x80) == 0 { // if not empty
 			// string "Tag"
 			o = append(o, 0xa3, 0x54, 0x61, 0x67)
 			o = (*z).message.Tag.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x80) == 0 { // if not empty
+		if (zb0001Mask & 0x100) == 0 { // if not empty
 			// string "TaskIndex"
 			o = append(o, 0xa9, 0x54, 0x61, 0x73, 0x6b, 0x49, 0x6e, 0x64, 0x65, 0x78)
 			o = msgp.AppendUint64(o, (*z).TaskIndex)
 		}
-		if (zb0001Mask & 0x100) == 0 { // if not empty
+		if (zb0001Mask & 0x200) == 0 { // if not empty
 			// string "UnauthenticatedBundle"
 			o = append(o, 0xb5, 0x55, 0x6e, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65)
 			o = (*z).message.UnauthenticatedBundle.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x200) == 0 { // if not empty
+		if (zb0001Mask & 0x400) == 0 { // if not empty
 			// string "UnauthenticatedProposal"
 			o = append(o, 0xb7, 0x55, 0x6e, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c)
 			o = (*z).message.UnauthenticatedProposal.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x400) == 0 { // if not empty
+		if (zb0001Mask & 0x800) == 0 { // if not empty
 			// string "UnauthenticatedVote"
 			o = append(o, 0xb3, 0x55, 0x6e, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x56, 0x6f, 0x74, 0x65)
 			o = (*z).message.UnauthenticatedVote.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x800) == 0 { // if not empty
+		if (zb0001Mask & 0x1000) == 0 { // if not empty
 			// string "Vote"
 			o = append(o, 0xa4, 0x56, 0x6f, 0x74, 0x65)
 			o = (*z).message.Vote.MarshalMsg(o)
@@ -2207,6 +2239,14 @@ func (z *cryptoBundleRequest) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		if err != nil {
 			err = msgp.WrapError(err)
 			return
+		}
+		if zb0001 > 0 {
+			zb0001--
+			bts, err = (*z).message.MessageHandle.UnmarshalMsg(bts)
+			if err != nil {
+				err = msgp.WrapError(err, "struct-from-array", "MessageHandle")
+				return
+			}
 		}
 		if zb0001 > 0 {
 			zb0001--
@@ -2395,6 +2435,12 @@ func (z *cryptoBundleRequest) UnmarshalMsg(bts []byte) (o []byte, err error) {
 				return
 			}
 			switch string(field) {
+			case "MessageHandle":
+				bts, err = (*z).message.MessageHandle.UnmarshalMsg(bts)
+				if err != nil {
+					err = msgp.WrapError(err, "MessageHandle")
+					return
+				}
 			case "Tag":
 				bts, err = (*z).message.Tag.UnmarshalMsg(bts)
 				if err != nil {
@@ -2555,21 +2601,21 @@ func (_ *cryptoBundleRequest) CanUnmarshalMsg(z interface{}) bool {
 
 // Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
 func (z *cryptoBundleRequest) Msgsize() (s int) {
-	s = 1 + 4 + (*z).message.Tag.Msgsize() + 5 + (*z).message.Vote.Msgsize() + 9 + (*z).message.Proposal.Msgsize() + 7 + (*z).message.Bundle.Msgsize() + 20 + (*z).message.UnauthenticatedVote.Msgsize() + 24 + (*z).message.UnauthenticatedProposal.Msgsize() + 22 + (*z).message.UnauthenticatedBundle.Msgsize() + 16 + 1 + 5 + (*z).message.CompoundMessage.Vote.Msgsize() + 9 + (*z).message.CompoundMessage.Proposal.Msgsize() + 10 + msgp.Uint64Size + 6 + (*z).Round.Msgsize() + 7 + msgp.Uint64Size + 8 + msgp.BoolSize
+	s = 1 + 14 + (*z).message.MessageHandle.Msgsize() + 4 + (*z).message.Tag.Msgsize() + 5 + (*z).message.Vote.Msgsize() + 9 + (*z).message.Proposal.Msgsize() + 7 + (*z).message.Bundle.Msgsize() + 20 + (*z).message.UnauthenticatedVote.Msgsize() + 24 + (*z).message.UnauthenticatedProposal.Msgsize() + 22 + (*z).message.UnauthenticatedBundle.Msgsize() + 16 + 1 + 5 + (*z).message.CompoundMessage.Vote.Msgsize() + 9 + (*z).message.CompoundMessage.Proposal.Msgsize() + 10 + msgp.Uint64Size + 6 + (*z).Round.Msgsize() + 7 + msgp.Uint64Size + 8 + msgp.BoolSize
 	return
 }
 
 // MsgIsZero returns whether this is a zero value
 func (z *cryptoBundleRequest) MsgIsZero() bool {
-	return ((*z).message.Tag.MsgIsZero()) && ((*z).message.Vote.MsgIsZero()) && ((*z).message.Proposal.MsgIsZero()) && ((*z).message.Bundle.MsgIsZero()) && ((*z).message.UnauthenticatedVote.MsgIsZero()) && ((*z).message.UnauthenticatedProposal.MsgIsZero()) && ((*z).message.UnauthenticatedBundle.MsgIsZero()) && (((*z).message.CompoundMessage.Vote.MsgIsZero()) && ((*z).message.CompoundMessage.Proposal.MsgIsZero())) && ((*z).TaskIndex == 0) && ((*z).Round.MsgIsZero()) && ((*z).Period == 0) && ((*z).Certify == false)
+	return ((*z).message.MessageHandle.MsgIsZero()) && ((*z).message.Tag.MsgIsZero()) && ((*z).message.Vote.MsgIsZero()) && ((*z).message.Proposal.MsgIsZero()) && ((*z).message.Bundle.MsgIsZero()) && ((*z).message.UnauthenticatedVote.MsgIsZero()) && ((*z).message.UnauthenticatedProposal.MsgIsZero()) && ((*z).message.UnauthenticatedBundle.MsgIsZero()) && (((*z).message.CompoundMessage.Vote.MsgIsZero()) && ((*z).message.CompoundMessage.Proposal.MsgIsZero())) && ((*z).TaskIndex == 0) && ((*z).Round.MsgIsZero()) && ((*z).Period == 0) && ((*z).Certify == false)
 }
 
 // MarshalMsg implements msgp.Marshaler
 func (z *cryptoProposalRequest) MarshalMsg(b []byte) (o []byte) {
 	o = msgp.Require(b, z.Msgsize())
 	// omitempty: check for empty values
-	zb0001Len := uint32(12)
-	var zb0001Mask uint16 /* 14 bits */
+	zb0001Len := uint32(13)
+	var zb0001Mask uint16 /* 15 bits */
 	if (*z).message.Bundle.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x1
@@ -2578,45 +2624,49 @@ func (z *cryptoProposalRequest) MarshalMsg(b []byte) (o []byte) {
 		zb0001Len--
 		zb0001Mask |= 0x2
 	}
-	if (*z).Period == 0 {
+	if (*z).message.MessageHandle.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x4
 	}
-	if (*z).Pinned == false {
+	if (*z).Period == 0 {
 		zb0001Len--
 		zb0001Mask |= 0x8
 	}
-	if (*z).message.Proposal.MsgIsZero() {
+	if (*z).Pinned == false {
 		zb0001Len--
 		zb0001Mask |= 0x10
 	}
-	if (*z).Round.MsgIsZero() {
+	if (*z).message.Proposal.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x20
 	}
-	if (*z).message.Tag.MsgIsZero() {
+	if (*z).Round.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x40
 	}
-	if (*z).TaskIndex == 0 {
+	if (*z).message.Tag.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x80
 	}
-	if (*z).message.UnauthenticatedBundle.MsgIsZero() {
+	if (*z).TaskIndex == 0 {
 		zb0001Len--
 		zb0001Mask |= 0x100
 	}
-	if (*z).message.UnauthenticatedProposal.MsgIsZero() {
+	if (*z).message.UnauthenticatedBundle.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x200
 	}
-	if (*z).message.UnauthenticatedVote.MsgIsZero() {
+	if (*z).message.UnauthenticatedProposal.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x400
 	}
-	if (*z).message.Vote.MsgIsZero() {
+	if (*z).message.UnauthenticatedVote.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x800
+	}
+	if (*z).message.Vote.MsgIsZero() {
+		zb0001Len--
+		zb0001Mask |= 0x1000
 	}
 	// variable map header, size zb0001Len
 	o = append(o, 0x80|uint8(zb0001Len))
@@ -2654,51 +2704,56 @@ func (z *cryptoProposalRequest) MarshalMsg(b []byte) (o []byte) {
 			}
 		}
 		if (zb0001Mask & 0x4) == 0 { // if not empty
+			// string "MessageHandle"
+			o = append(o, 0xad, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65)
+			o = (*z).message.MessageHandle.MarshalMsg(o)
+		}
+		if (zb0001Mask & 0x8) == 0 { // if not empty
 			// string "Period"
 			o = append(o, 0xa6, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64)
 			o = msgp.AppendUint64(o, uint64((*z).Period))
 		}
-		if (zb0001Mask & 0x8) == 0 { // if not empty
+		if (zb0001Mask & 0x10) == 0 { // if not empty
 			// string "Pinned"
 			o = append(o, 0xa6, 0x50, 0x69, 0x6e, 0x6e, 0x65, 0x64)
 			o = msgp.AppendBool(o, (*z).Pinned)
 		}
-		if (zb0001Mask & 0x10) == 0 { // if not empty
+		if (zb0001Mask & 0x20) == 0 { // if not empty
 			// string "Proposal"
 			o = append(o, 0xa8, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c)
 			o = (*z).message.Proposal.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x20) == 0 { // if not empty
+		if (zb0001Mask & 0x40) == 0 { // if not empty
 			// string "Round"
 			o = append(o, 0xa5, 0x52, 0x6f, 0x75, 0x6e, 0x64)
 			o = (*z).Round.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x40) == 0 { // if not empty
+		if (zb0001Mask & 0x80) == 0 { // if not empty
 			// string "Tag"
 			o = append(o, 0xa3, 0x54, 0x61, 0x67)
 			o = (*z).message.Tag.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x80) == 0 { // if not empty
+		if (zb0001Mask & 0x100) == 0 { // if not empty
 			// string "TaskIndex"
 			o = append(o, 0xa9, 0x54, 0x61, 0x73, 0x6b, 0x49, 0x6e, 0x64, 0x65, 0x78)
 			o = msgp.AppendUint64(o, (*z).TaskIndex)
 		}
-		if (zb0001Mask & 0x100) == 0 { // if not empty
+		if (zb0001Mask & 0x200) == 0 { // if not empty
 			// string "UnauthenticatedBundle"
 			o = append(o, 0xb5, 0x55, 0x6e, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65)
 			o = (*z).message.UnauthenticatedBundle.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x200) == 0 { // if not empty
+		if (zb0001Mask & 0x400) == 0 { // if not empty
 			// string "UnauthenticatedProposal"
 			o = append(o, 0xb7, 0x55, 0x6e, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c)
 			o = (*z).message.UnauthenticatedProposal.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x400) == 0 { // if not empty
+		if (zb0001Mask & 0x800) == 0 { // if not empty
 			// string "UnauthenticatedVote"
 			o = append(o, 0xb3, 0x55, 0x6e, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x56, 0x6f, 0x74, 0x65)
 			o = (*z).message.UnauthenticatedVote.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x800) == 0 { // if not empty
+		if (zb0001Mask & 0x1000) == 0 { // if not empty
 			// string "Vote"
 			o = append(o, 0xa4, 0x56, 0x6f, 0x74, 0x65)
 			o = (*z).message.Vote.MarshalMsg(o)
@@ -2724,6 +2779,14 @@ func (z *cryptoProposalRequest) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		if err != nil {
 			err = msgp.WrapError(err)
 			return
+		}
+		if zb0001 > 0 {
+			zb0001--
+			bts, err = (*z).message.MessageHandle.UnmarshalMsg(bts)
+			if err != nil {
+				err = msgp.WrapError(err, "struct-from-array", "MessageHandle")
+				return
+			}
 		}
 		if zb0001 > 0 {
 			zb0001--
@@ -2912,6 +2975,12 @@ func (z *cryptoProposalRequest) UnmarshalMsg(bts []byte) (o []byte, err error) {
 				return
 			}
 			switch string(field) {
+			case "MessageHandle":
+				bts, err = (*z).message.MessageHandle.UnmarshalMsg(bts)
+				if err != nil {
+					err = msgp.WrapError(err, "MessageHandle")
+					return
+				}
 			case "Tag":
 				bts, err = (*z).message.Tag.UnmarshalMsg(bts)
 				if err != nil {
@@ -3072,21 +3141,21 @@ func (_ *cryptoProposalRequest) CanUnmarshalMsg(z interface{}) bool {
 
 // Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
 func (z *cryptoProposalRequest) Msgsize() (s int) {
-	s = 1 + 4 + (*z).message.Tag.Msgsize() + 5 + (*z).message.Vote.Msgsize() + 9 + (*z).message.Proposal.Msgsize() + 7 + (*z).message.Bundle.Msgsize() + 20 + (*z).message.UnauthenticatedVote.Msgsize() + 24 + (*z).message.UnauthenticatedProposal.Msgsize() + 22 + (*z).message.UnauthenticatedBundle.Msgsize() + 16 + 1 + 5 + (*z).message.CompoundMessage.Vote.Msgsize() + 9 + (*z).message.CompoundMessage.Proposal.Msgsize() + 10 + msgp.Uint64Size + 6 + (*z).Round.Msgsize() + 7 + msgp.Uint64Size + 7 + msgp.BoolSize
+	s = 1 + 14 + (*z).message.MessageHandle.Msgsize() + 4 + (*z).message.Tag.Msgsize() + 5 + (*z).message.Vote.Msgsize() + 9 + (*z).message.Proposal.Msgsize() + 7 + (*z).message.Bundle.Msgsize() + 20 + (*z).message.UnauthenticatedVote.Msgsize() + 24 + (*z).message.UnauthenticatedProposal.Msgsize() + 22 + (*z).message.UnauthenticatedBundle.Msgsize() + 16 + 1 + 5 + (*z).message.CompoundMessage.Vote.Msgsize() + 9 + (*z).message.CompoundMessage.Proposal.Msgsize() + 10 + msgp.Uint64Size + 6 + (*z).Round.Msgsize() + 7 + msgp.Uint64Size + 7 + msgp.BoolSize
 	return
 }
 
 // MsgIsZero returns whether this is a zero value
 func (z *cryptoProposalRequest) MsgIsZero() bool {
-	return ((*z).message.Tag.MsgIsZero()) && ((*z).message.Vote.MsgIsZero()) && ((*z).message.Proposal.MsgIsZero()) && ((*z).message.Bundle.MsgIsZero()) && ((*z).message.UnauthenticatedVote.MsgIsZero()) && ((*z).message.UnauthenticatedProposal.MsgIsZero()) && ((*z).message.UnauthenticatedBundle.MsgIsZero()) && (((*z).message.CompoundMessage.Vote.MsgIsZero()) && ((*z).message.CompoundMessage.Proposal.MsgIsZero())) && ((*z).TaskIndex == 0) && ((*z).Round.MsgIsZero()) && ((*z).Period == 0) && ((*z).Pinned == false)
+	return ((*z).message.MessageHandle.MsgIsZero()) && ((*z).message.Tag.MsgIsZero()) && ((*z).message.Vote.MsgIsZero()) && ((*z).message.Proposal.MsgIsZero()) && ((*z).message.Bundle.MsgIsZero()) && ((*z).message.UnauthenticatedVote.MsgIsZero()) && ((*z).message.UnauthenticatedProposal.MsgIsZero()) && ((*z).message.UnauthenticatedBundle.MsgIsZero()) && (((*z).message.CompoundMessage.Vote.MsgIsZero()) && ((*z).message.CompoundMessage.Proposal.MsgIsZero())) && ((*z).TaskIndex == 0) && ((*z).Round.MsgIsZero()) && ((*z).Period == 0) && ((*z).Pinned == false)
 }
 
 // MarshalMsg implements msgp.Marshaler
 func (z *cryptoResult) MarshalMsg(b []byte) (o []byte) {
 	o = msgp.Require(b, z.Msgsize())
 	// omitempty: check for empty values
-	zb0001Len := uint32(11)
-	var zb0001Mask uint16 /* 12 bits */
+	zb0001Len := uint32(12)
+	var zb0001Mask uint16 /* 13 bits */
 	if (*z).message.Bundle.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x1
@@ -3103,33 +3172,37 @@ func (z *cryptoResult) MarshalMsg(b []byte) (o []byte) {
 		zb0001Len--
 		zb0001Mask |= 0x8
 	}
-	if (*z).message.Proposal.MsgIsZero() {
+	if (*z).message.MessageHandle.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x10
 	}
-	if (*z).message.Tag.MsgIsZero() {
+	if (*z).message.Proposal.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x20
 	}
-	if (*z).TaskIndex == 0 {
+	if (*z).message.Tag.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x40
 	}
-	if (*z).message.UnauthenticatedBundle.MsgIsZero() {
+	if (*z).TaskIndex == 0 {
 		zb0001Len--
 		zb0001Mask |= 0x80
 	}
-	if (*z).message.UnauthenticatedProposal.MsgIsZero() {
+	if (*z).message.UnauthenticatedBundle.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x100
 	}
-	if (*z).message.UnauthenticatedVote.MsgIsZero() {
+	if (*z).message.UnauthenticatedProposal.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x200
 	}
-	if (*z).message.Vote.MsgIsZero() {
+	if (*z).message.UnauthenticatedVote.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x400
+	}
+	if (*z).message.Vote.MsgIsZero() {
+		zb0001Len--
+		zb0001Mask |= 0x800
 	}
 	// variable map header, size zb0001Len
 	o = append(o, 0x80|uint8(zb0001Len))
@@ -3181,36 +3254,41 @@ func (z *cryptoResult) MarshalMsg(b []byte) (o []byte) {
 			}
 		}
 		if (zb0001Mask & 0x10) == 0 { // if not empty
+			// string "MessageHandle"
+			o = append(o, 0xad, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65)
+			o = (*z).message.MessageHandle.MarshalMsg(o)
+		}
+		if (zb0001Mask & 0x20) == 0 { // if not empty
 			// string "Proposal"
 			o = append(o, 0xa8, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c)
 			o = (*z).message.Proposal.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x20) == 0 { // if not empty
+		if (zb0001Mask & 0x40) == 0 { // if not empty
 			// string "Tag"
 			o = append(o, 0xa3, 0x54, 0x61, 0x67)
 			o = (*z).message.Tag.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x40) == 0 { // if not empty
+		if (zb0001Mask & 0x80) == 0 { // if not empty
 			// string "TaskIndex"
 			o = append(o, 0xa9, 0x54, 0x61, 0x73, 0x6b, 0x49, 0x6e, 0x64, 0x65, 0x78)
 			o = msgp.AppendUint64(o, (*z).TaskIndex)
 		}
-		if (zb0001Mask & 0x80) == 0 { // if not empty
+		if (zb0001Mask & 0x100) == 0 { // if not empty
 			// string "UnauthenticatedBundle"
 			o = append(o, 0xb5, 0x55, 0x6e, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65)
 			o = (*z).message.UnauthenticatedBundle.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x100) == 0 { // if not empty
+		if (zb0001Mask & 0x200) == 0 { // if not empty
 			// string "UnauthenticatedProposal"
 			o = append(o, 0xb7, 0x55, 0x6e, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c)
 			o = (*z).message.UnauthenticatedProposal.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x200) == 0 { // if not empty
+		if (zb0001Mask & 0x400) == 0 { // if not empty
 			// string "UnauthenticatedVote"
 			o = append(o, 0xb3, 0x55, 0x6e, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x56, 0x6f, 0x74, 0x65)
 			o = (*z).message.UnauthenticatedVote.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x400) == 0 { // if not empty
+		if (zb0001Mask & 0x800) == 0 { // if not empty
 			// string "Vote"
 			o = append(o, 0xa4, 0x56, 0x6f, 0x74, 0x65)
 			o = (*z).message.Vote.MarshalMsg(o)
@@ -3236,6 +3314,14 @@ func (z *cryptoResult) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		if err != nil {
 			err = msgp.WrapError(err)
 			return
+		}
+		if zb0001 > 0 {
+			zb0001--
+			bts, err = (*z).message.MessageHandle.UnmarshalMsg(bts)
+			if err != nil {
+				err = msgp.WrapError(err, "struct-from-array", "MessageHandle")
+				return
+			}
 		}
 		if zb0001 > 0 {
 			zb0001--
@@ -3427,6 +3513,12 @@ func (z *cryptoResult) UnmarshalMsg(bts []byte) (o []byte, err error) {
 				return
 			}
 			switch string(field) {
+			case "MessageHandle":
+				bts, err = (*z).message.MessageHandle.UnmarshalMsg(bts)
+				if err != nil {
+					err = msgp.WrapError(err, "MessageHandle")
+					return
+				}
 			case "Tag":
 				bts, err = (*z).message.Tag.UnmarshalMsg(bts)
 				if err != nil {
@@ -3592,7 +3684,7 @@ func (_ *cryptoResult) CanUnmarshalMsg(z interface{}) bool {
 
 // Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
 func (z *cryptoResult) Msgsize() (s int) {
-	s = 1 + 4 + (*z).message.Tag.Msgsize() + 5 + (*z).message.Vote.Msgsize() + 9 + (*z).message.Proposal.Msgsize() + 7 + (*z).message.Bundle.Msgsize() + 20 + (*z).message.UnauthenticatedVote.Msgsize() + 24 + (*z).message.UnauthenticatedProposal.Msgsize() + 22 + (*z).message.UnauthenticatedBundle.Msgsize() + 16 + 1 + 5 + (*z).message.CompoundMessage.Vote.Msgsize() + 9 + (*z).message.CompoundMessage.Proposal.Msgsize() + 4
+	s = 1 + 14 + (*z).message.MessageHandle.Msgsize() + 4 + (*z).message.Tag.Msgsize() + 5 + (*z).message.Vote.Msgsize() + 9 + (*z).message.Proposal.Msgsize() + 7 + (*z).message.Bundle.Msgsize() + 20 + (*z).message.UnauthenticatedVote.Msgsize() + 24 + (*z).message.UnauthenticatedProposal.Msgsize() + 22 + (*z).message.UnauthenticatedBundle.Msgsize() + 16 + 1 + 5 + (*z).message.CompoundMessage.Vote.Msgsize() + 9 + (*z).message.CompoundMessage.Proposal.Msgsize() + 4
 	if (*z).Err == nil {
 		s += msgp.NilSize
 	} else {
@@ -3604,15 +3696,15 @@ func (z *cryptoResult) Msgsize() (s int) {
 
 // MsgIsZero returns whether this is a zero value
 func (z *cryptoResult) MsgIsZero() bool {
-	return ((*z).message.Tag.MsgIsZero()) && ((*z).message.Vote.MsgIsZero()) && ((*z).message.Proposal.MsgIsZero()) && ((*z).message.Bundle.MsgIsZero()) && ((*z).message.UnauthenticatedVote.MsgIsZero()) && ((*z).message.UnauthenticatedProposal.MsgIsZero()) && ((*z).message.UnauthenticatedBundle.MsgIsZero()) && (((*z).message.CompoundMessage.Vote.MsgIsZero()) && ((*z).message.CompoundMessage.Proposal.MsgIsZero())) && ((*z).Err == nil) && ((*z).TaskIndex == 0) && ((*z).Cancelled == false)
+	return ((*z).message.MessageHandle.MsgIsZero()) && ((*z).message.Tag.MsgIsZero()) && ((*z).message.Vote.MsgIsZero()) && ((*z).message.Proposal.MsgIsZero()) && ((*z).message.Bundle.MsgIsZero()) && ((*z).message.UnauthenticatedVote.MsgIsZero()) && ((*z).message.UnauthenticatedProposal.MsgIsZero()) && ((*z).message.UnauthenticatedBundle.MsgIsZero()) && (((*z).message.CompoundMessage.Vote.MsgIsZero()) && ((*z).message.CompoundMessage.Proposal.MsgIsZero())) && ((*z).Err == nil) && ((*z).TaskIndex == 0) && ((*z).Cancelled == false)
 }
 
 // MarshalMsg implements msgp.Marshaler
 func (z *cryptoVoteRequest) MarshalMsg(b []byte) (o []byte) {
 	o = msgp.Require(b, z.Msgsize())
 	// omitempty: check for empty values
-	zb0001Len := uint32(11)
-	var zb0001Mask uint16 /* 13 bits */
+	zb0001Len := uint32(12)
+	var zb0001Mask uint16 /* 14 bits */
 	if (*z).message.Bundle.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x1
@@ -3621,41 +3713,45 @@ func (z *cryptoVoteRequest) MarshalMsg(b []byte) (o []byte) {
 		zb0001Len--
 		zb0001Mask |= 0x2
 	}
-	if (*z).Period == 0 {
+	if (*z).message.MessageHandle.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x4
 	}
-	if (*z).message.Proposal.MsgIsZero() {
+	if (*z).Period == 0 {
 		zb0001Len--
 		zb0001Mask |= 0x8
 	}
-	if (*z).Round.MsgIsZero() {
+	if (*z).message.Proposal.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x10
 	}
-	if (*z).message.Tag.MsgIsZero() {
+	if (*z).Round.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x20
 	}
-	if (*z).TaskIndex == 0 {
+	if (*z).message.Tag.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x40
 	}
-	if (*z).message.UnauthenticatedBundle.MsgIsZero() {
+	if (*z).TaskIndex == 0 {
 		zb0001Len--
 		zb0001Mask |= 0x80
 	}
-	if (*z).message.UnauthenticatedProposal.MsgIsZero() {
+	if (*z).message.UnauthenticatedBundle.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x100
 	}
-	if (*z).message.UnauthenticatedVote.MsgIsZero() {
+	if (*z).message.UnauthenticatedProposal.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x200
 	}
-	if (*z).message.Vote.MsgIsZero() {
+	if (*z).message.UnauthenticatedVote.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x400
+	}
+	if (*z).message.Vote.MsgIsZero() {
+		zb0001Len--
+		zb0001Mask |= 0x800
 	}
 	// variable map header, size zb0001Len
 	o = append(o, 0x80|uint8(zb0001Len))
@@ -3693,46 +3789,51 @@ func (z *cryptoVoteRequest) MarshalMsg(b []byte) (o []byte) {
 			}
 		}
 		if (zb0001Mask & 0x4) == 0 { // if not empty
+			// string "MessageHandle"
+			o = append(o, 0xad, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65)
+			o = (*z).message.MessageHandle.MarshalMsg(o)
+		}
+		if (zb0001Mask & 0x8) == 0 { // if not empty
 			// string "Period"
 			o = append(o, 0xa6, 0x50, 0x65, 0x72, 0x69, 0x6f, 0x64)
 			o = msgp.AppendUint64(o, uint64((*z).Period))
 		}
-		if (zb0001Mask & 0x8) == 0 { // if not empty
+		if (zb0001Mask & 0x10) == 0 { // if not empty
 			// string "Proposal"
 			o = append(o, 0xa8, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c)
 			o = (*z).message.Proposal.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x10) == 0 { // if not empty
+		if (zb0001Mask & 0x20) == 0 { // if not empty
 			// string "Round"
 			o = append(o, 0xa5, 0x52, 0x6f, 0x75, 0x6e, 0x64)
 			o = (*z).Round.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x20) == 0 { // if not empty
+		if (zb0001Mask & 0x40) == 0 { // if not empty
 			// string "Tag"
 			o = append(o, 0xa3, 0x54, 0x61, 0x67)
 			o = (*z).message.Tag.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x40) == 0 { // if not empty
+		if (zb0001Mask & 0x80) == 0 { // if not empty
 			// string "TaskIndex"
 			o = append(o, 0xa9, 0x54, 0x61, 0x73, 0x6b, 0x49, 0x6e, 0x64, 0x65, 0x78)
 			o = msgp.AppendUint64(o, (*z).TaskIndex)
 		}
-		if (zb0001Mask & 0x80) == 0 { // if not empty
+		if (zb0001Mask & 0x100) == 0 { // if not empty
 			// string "UnauthenticatedBundle"
 			o = append(o, 0xb5, 0x55, 0x6e, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65)
 			o = (*z).message.UnauthenticatedBundle.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x100) == 0 { // if not empty
+		if (zb0001Mask & 0x200) == 0 { // if not empty
 			// string "UnauthenticatedProposal"
 			o = append(o, 0xb7, 0x55, 0x6e, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c)
 			o = (*z).message.UnauthenticatedProposal.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x200) == 0 { // if not empty
+		if (zb0001Mask & 0x400) == 0 { // if not empty
 			// string "UnauthenticatedVote"
 			o = append(o, 0xb3, 0x55, 0x6e, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x56, 0x6f, 0x74, 0x65)
 			o = (*z).message.UnauthenticatedVote.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x400) == 0 { // if not empty
+		if (zb0001Mask & 0x800) == 0 { // if not empty
 			// string "Vote"
 			o = append(o, 0xa4, 0x56, 0x6f, 0x74, 0x65)
 			o = (*z).message.Vote.MarshalMsg(o)
@@ -3758,6 +3859,14 @@ func (z *cryptoVoteRequest) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		if err != nil {
 			err = msgp.WrapError(err)
 			return
+		}
+		if zb0001 > 0 {
+			zb0001--
+			bts, err = (*z).message.MessageHandle.UnmarshalMsg(bts)
+			if err != nil {
+				err = msgp.WrapError(err, "struct-from-array", "MessageHandle")
+				return
+			}
 		}
 		if zb0001 > 0 {
 			zb0001--
@@ -3938,6 +4047,12 @@ func (z *cryptoVoteRequest) UnmarshalMsg(bts []byte) (o []byte, err error) {
 				return
 			}
 			switch string(field) {
+			case "MessageHandle":
+				bts, err = (*z).message.MessageHandle.UnmarshalMsg(bts)
+				if err != nil {
+					err = msgp.WrapError(err, "MessageHandle")
+					return
+				}
 			case "Tag":
 				bts, err = (*z).message.Tag.UnmarshalMsg(bts)
 				if err != nil {
@@ -4092,13 +4207,13 @@ func (_ *cryptoVoteRequest) CanUnmarshalMsg(z interface{}) bool {
 
 // Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
 func (z *cryptoVoteRequest) Msgsize() (s int) {
-	s = 1 + 4 + (*z).message.Tag.Msgsize() + 5 + (*z).message.Vote.Msgsize() + 9 + (*z).message.Proposal.Msgsize() + 7 + (*z).message.Bundle.Msgsize() + 20 + (*z).message.UnauthenticatedVote.Msgsize() + 24 + (*z).message.UnauthenticatedProposal.Msgsize() + 22 + (*z).message.UnauthenticatedBundle.Msgsize() + 16 + 1 + 5 + (*z).message.CompoundMessage.Vote.Msgsize() + 9 + (*z).message.CompoundMessage.Proposal.Msgsize() + 10 + msgp.Uint64Size + 6 + (*z).Round.Msgsize() + 7 + msgp.Uint64Size
+	s = 1 + 14 + (*z).message.MessageHandle.Msgsize() + 4 + (*z).message.Tag.Msgsize() + 5 + (*z).message.Vote.Msgsize() + 9 + (*z).message.Proposal.Msgsize() + 7 + (*z).message.Bundle.Msgsize() + 20 + (*z).message.UnauthenticatedVote.Msgsize() + 24 + (*z).message.UnauthenticatedProposal.Msgsize() + 22 + (*z).message.UnauthenticatedBundle.Msgsize() + 16 + 1 + 5 + (*z).message.CompoundMessage.Vote.Msgsize() + 9 + (*z).message.CompoundMessage.Proposal.Msgsize() + 10 + msgp.Uint64Size + 6 + (*z).Round.Msgsize() + 7 + msgp.Uint64Size
 	return
 }
 
 // MsgIsZero returns whether this is a zero value
 func (z *cryptoVoteRequest) MsgIsZero() bool {
-	return ((*z).message.Tag.MsgIsZero()) && ((*z).message.Vote.MsgIsZero()) && ((*z).message.Proposal.MsgIsZero()) && ((*z).message.Bundle.MsgIsZero()) && ((*z).message.UnauthenticatedVote.MsgIsZero()) && ((*z).message.UnauthenticatedProposal.MsgIsZero()) && ((*z).message.UnauthenticatedBundle.MsgIsZero()) && (((*z).message.CompoundMessage.Vote.MsgIsZero()) && ((*z).message.CompoundMessage.Proposal.MsgIsZero())) && ((*z).TaskIndex == 0) && ((*z).Round.MsgIsZero()) && ((*z).Period == 0)
+	return ((*z).message.MessageHandle.MsgIsZero()) && ((*z).message.Tag.MsgIsZero()) && ((*z).message.Vote.MsgIsZero()) && ((*z).message.Proposal.MsgIsZero()) && ((*z).message.Bundle.MsgIsZero()) && ((*z).message.UnauthenticatedVote.MsgIsZero()) && ((*z).message.UnauthenticatedProposal.MsgIsZero()) && ((*z).message.UnauthenticatedBundle.MsgIsZero()) && (((*z).message.CompoundMessage.Vote.MsgIsZero()) && ((*z).message.CompoundMessage.Proposal.MsgIsZero())) && ((*z).TaskIndex == 0) && ((*z).Round.MsgIsZero()) && ((*z).Period == 0)
 }
 
 // MarshalMsg implements msgp.Marshaler
@@ -5516,8 +5631,8 @@ func (z *freshnessData) MsgIsZero() bool {
 func (z *message) MarshalMsg(b []byte) (o []byte) {
 	o = msgp.Require(b, z.Msgsize())
 	// omitempty: check for empty values
-	zb0001Len := uint32(8)
-	var zb0001Mask uint16 /* 9 bits */
+	zb0001Len := uint32(9)
+	var zb0001Mask uint16 /* 10 bits */
 	if (*z).Bundle.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x1
@@ -5526,29 +5641,33 @@ func (z *message) MarshalMsg(b []byte) (o []byte) {
 		zb0001Len--
 		zb0001Mask |= 0x2
 	}
-	if (*z).Proposal.MsgIsZero() {
+	if (*z).MessageHandle.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x4
 	}
-	if (*z).Tag.MsgIsZero() {
+	if (*z).Proposal.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x8
 	}
-	if (*z).UnauthenticatedBundle.MsgIsZero() {
+	if (*z).Tag.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x10
 	}
-	if (*z).UnauthenticatedProposal.MsgIsZero() {
+	if (*z).UnauthenticatedBundle.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x20
 	}
-	if (*z).UnauthenticatedVote.MsgIsZero() {
+	if (*z).UnauthenticatedProposal.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x40
 	}
-	if (*z).Vote.MsgIsZero() {
+	if (*z).UnauthenticatedVote.MsgIsZero() {
 		zb0001Len--
 		zb0001Mask |= 0x80
+	}
+	if (*z).Vote.MsgIsZero() {
+		zb0001Len--
+		zb0001Mask |= 0x100
 	}
 	// variable map header, size zb0001Len
 	o = append(o, 0x80|uint8(zb0001Len))
@@ -5586,31 +5705,36 @@ func (z *message) MarshalMsg(b []byte) (o []byte) {
 			}
 		}
 		if (zb0001Mask & 0x4) == 0 { // if not empty
+			// string "MessageHandle"
+			o = append(o, 0xad, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65)
+			o = (*z).MessageHandle.MarshalMsg(o)
+		}
+		if (zb0001Mask & 0x8) == 0 { // if not empty
 			// string "Proposal"
 			o = append(o, 0xa8, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c)
 			o = (*z).Proposal.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x8) == 0 { // if not empty
+		if (zb0001Mask & 0x10) == 0 { // if not empty
 			// string "Tag"
 			o = append(o, 0xa3, 0x54, 0x61, 0x67)
 			o = (*z).Tag.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x10) == 0 { // if not empty
+		if (zb0001Mask & 0x20) == 0 { // if not empty
 			// string "UnauthenticatedBundle"
 			o = append(o, 0xb5, 0x55, 0x6e, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65)
 			o = (*z).UnauthenticatedBundle.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x20) == 0 { // if not empty
+		if (zb0001Mask & 0x40) == 0 { // if not empty
 			// string "UnauthenticatedProposal"
 			o = append(o, 0xb7, 0x55, 0x6e, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c)
 			o = (*z).UnauthenticatedProposal.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x40) == 0 { // if not empty
+		if (zb0001Mask & 0x80) == 0 { // if not empty
 			// string "UnauthenticatedVote"
 			o = append(o, 0xb3, 0x55, 0x6e, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x56, 0x6f, 0x74, 0x65)
 			o = (*z).UnauthenticatedVote.MarshalMsg(o)
 		}
-		if (zb0001Mask & 0x80) == 0 { // if not empty
+		if (zb0001Mask & 0x100) == 0 { // if not empty
 			// string "Vote"
 			o = append(o, 0xa4, 0x56, 0x6f, 0x74, 0x65)
 			o = (*z).Vote.MarshalMsg(o)
@@ -5636,6 +5760,14 @@ func (z *message) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		if err != nil {
 			err = msgp.WrapError(err)
 			return
+		}
+		if zb0001 > 0 {
+			zb0001--
+			bts, err = (*z).MessageHandle.UnmarshalMsg(bts)
+			if err != nil {
+				err = msgp.WrapError(err, "struct-from-array", "MessageHandle")
+				return
+			}
 		}
 		if zb0001 > 0 {
 			zb0001--
@@ -5788,6 +5920,12 @@ func (z *message) UnmarshalMsg(bts []byte) (o []byte, err error) {
 				return
 			}
 			switch string(field) {
+			case "MessageHandle":
+				bts, err = (*z).MessageHandle.UnmarshalMsg(bts)
+				if err != nil {
+					err = msgp.WrapError(err, "MessageHandle")
+					return
+				}
 			case "Tag":
 				bts, err = (*z).Tag.UnmarshalMsg(bts)
 				if err != nil {
@@ -5920,13 +6058,13 @@ func (_ *message) CanUnmarshalMsg(z interface{}) bool {
 
 // Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
 func (z *message) Msgsize() (s int) {
-	s = 1 + 4 + (*z).Tag.Msgsize() + 5 + (*z).Vote.Msgsize() + 9 + (*z).Proposal.Msgsize() + 7 + (*z).Bundle.Msgsize() + 20 + (*z).UnauthenticatedVote.Msgsize() + 24 + (*z).UnauthenticatedProposal.Msgsize() + 22 + (*z).UnauthenticatedBundle.Msgsize() + 16 + 1 + 5 + (*z).CompoundMessage.Vote.Msgsize() + 9 + (*z).CompoundMessage.Proposal.Msgsize()
+	s = 1 + 14 + (*z).MessageHandle.Msgsize() + 4 + (*z).Tag.Msgsize() + 5 + (*z).Vote.Msgsize() + 9 + (*z).Proposal.Msgsize() + 7 + (*z).Bundle.Msgsize() + 20 + (*z).UnauthenticatedVote.Msgsize() + 24 + (*z).UnauthenticatedProposal.Msgsize() + 22 + (*z).UnauthenticatedBundle.Msgsize() + 16 + 1 + 5 + (*z).CompoundMessage.Vote.Msgsize() + 9 + (*z).CompoundMessage.Proposal.Msgsize()
 	return
 }
 
 // MsgIsZero returns whether this is a zero value
 func (z *message) MsgIsZero() bool {
-	return ((*z).Tag.MsgIsZero()) && ((*z).Vote.MsgIsZero()) && ((*z).Proposal.MsgIsZero()) && ((*z).Bundle.MsgIsZero()) && ((*z).UnauthenticatedVote.MsgIsZero()) && ((*z).UnauthenticatedProposal.MsgIsZero()) && ((*z).UnauthenticatedBundle.MsgIsZero()) && (((*z).CompoundMessage.Vote.MsgIsZero()) && ((*z).CompoundMessage.Proposal.MsgIsZero()))
+	return ((*z).MessageHandle.MsgIsZero()) && ((*z).Tag.MsgIsZero()) && ((*z).Vote.MsgIsZero()) && ((*z).Proposal.MsgIsZero()) && ((*z).Bundle.MsgIsZero()) && ((*z).UnauthenticatedVote.MsgIsZero()) && ((*z).UnauthenticatedProposal.MsgIsZero()) && ((*z).UnauthenticatedBundle.MsgIsZero()) && (((*z).CompoundMessage.Vote.MsgIsZero()) && ((*z).CompoundMessage.Proposal.MsgIsZero()))
 }
 
 // MarshalMsg implements msgp.Marshaler

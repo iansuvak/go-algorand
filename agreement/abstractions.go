@@ -234,7 +234,12 @@ type KeyManager interface {
 // MessageHandle is an ID referring to a specific message.
 //
 // A MessageHandle of nil denotes that a message is "sourceless".
-type MessageHandle interface{}
+type MessageHandle interface {
+	MsgIsZero() bool
+	MarshalMsg([]byte) []byte
+	UnmarshalMsg([]byte) ([]byte, error)
+	Msgsize() int
+}
 
 // Network is an abstraction over the interface expected by the agreement
 // protocol.

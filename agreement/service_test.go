@@ -120,7 +120,7 @@ type testingNetwork struct {
 
 	connected  [][]bool // symmetric
 	nextHandle int
-	source     map[MessageHandle]nodeID
+	source     map[int]nodeID
 	monitors   map[nodeID]*coserviceMonitor
 
 	// used for extra tests
@@ -158,7 +158,7 @@ func makeTestingNetwork(nodes int, bufferCapacity int, validator BlockValidator)
 	n.voteMessages = make([]chan Message, nodes)
 	n.payloadMessages = make([]chan Message, nodes)
 	n.bundleMessages = make([]chan Message, nodes)
-	n.source = make(map[MessageHandle]nodeID)
+	n.source = make(map[int]nodeID)
 	n.monitors = make(map[nodeID]*coserviceMonitor)
 
 	for i := 0; i < nodes; i++ {
@@ -250,8 +250,8 @@ func (n *testingNetwork) multicast(tag protocol.Tag, data []byte, source nodeID,
 	}
 
 	n.nextHandle++
-	handle := new(int)
-	*handle = n.nextHandle
+	var handle int
+	handle = n.nextHandle
 	n.source[handle] = source
 
 	var msgChans []chan Message
@@ -299,7 +299,7 @@ func (n *testingNetwork) multicast(tag protocol.Tag, data []byte, source nodeID,
 		// we should have incremented tokenizerCoserviceType
 		n.monitors[peerid].inc(tokenizerCoserviceType)
 		select {
-		case msgChans[peerid] <- Message{MessageHandle: handle, Data: data}:
+		case msgChans[peerid] <- Message{MessageHandle: &messageIntMetadata{raw: handle}, Data: data}:
 			// fmt.Println("transmit-success", source, "->", peerid)
 		default:
 			logging.Base().Warn("message dropped during test")
@@ -419,10 +419,10 @@ func (n *testingNetwork) intercept(f multicastInterceptFn) {
 func (n *testingNetwork) sourceOf(h MessageHandle) nodeID {
 	n.mu.Lock()
 	defer n.mu.Unlock()
-	if _, noint := h.(*int); !noint {
+	if _, noint := h.(messageIntMetadata); !noint {
 		panic(fmt.Errorf("h isn't a *int; %v", reflect.TypeOf(h)))
 	}
-	return n.source[h]
+	return n.source[h.(messageIntMetadata).raw]
 }
 
 func (n *testingNetwork) testingNetworkEndpoint(id nodeID) *testingNetworkEndpoint {
@@ -473,7 +473,7 @@ func (e *testingNetworkEndpoint) Broadcast(tag protocol.Tag, data []byte) error 
 
 func (e *testingNetworkEndpoint) Relay(h MessageHandle, t protocol.Tag, data []byte) error {
 	sourceID := e.id
-	if _, isMsg := h.(*int); isMsg {
+	if _, isMsg := h.(messageIntMetadata); isMsg {
 		sourceID = e.parent.sourceOf(h)
 	}
 
@@ -482,7 +482,7 @@ func (e *testingNetworkEndpoint) Relay(h MessageHandle, t protocol.Tag, data []b
 }
 
 func (e *testingNetworkEndpoint) Disconnect(h MessageHandle) {
-	if _, isMsg := h.(*int); !isMsg {
+	if _, isMsg := h.(messageIntMetadata); !isMsg {
 		return
 	}
 

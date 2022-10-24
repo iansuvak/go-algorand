@@ -81,6 +81,27 @@ func makeUnauthenticatedVote(l Ledger, sender basics.Address, selection *crypto.
 		Cred: cred,
 	}
 }
+
+type messageIntMetadata struct {
+	raw int
+}
+
+func (md messageIntMetadata) MsgIsZero() bool {
+	return true
+}
+
+func (md messageIntMetadata) Msgsize() int {
+	return 0
+}
+
+func (md messageIntMetadata) MarshalMsg(b []byte) []byte {
+	return nil
+}
+
+func (md messageIntMetadata) UnmarshalMsg(b []byte) ([]byte, error) {
+	return b, nil
+}
+
 func makeMessage(msgHandle int, tag protocol.Tag, sender basics.Address, l Ledger, selection *crypto.VRFSecrets, voting crypto.OneTimeSigner, Round basics.Round, Period period, Step step) message {
 	switch tag {
 	case protocol.AgreementVoteTag:
@@ -93,7 +114,7 @@ func makeMessage(msgHandle int, tag protocol.Tag, sender basics.Address, l Ledge
 		}
 
 		return message{
-			messageHandle:       MessageHandle(msgHandle),
+			MessageHandle:       messageIntMetadata{raw: msgHandle},
 			Tag:                 tag,
 			UnauthenticatedVote: makeUnauthenticatedVote(l, sender, selection, voting, Round, Period, Step, proposal),
 		}
@@ -103,13 +124,13 @@ func makeMessage(msgHandle int, tag protocol.Tag, sender basics.Address, l Ledge
 			Block: e,
 		}
 		return message{
-			messageHandle:           MessageHandle(msgHandle),
+			MessageHandle:           messageIntMetadata{raw: msgHandle},
 			Tag:                     tag,
 			UnauthenticatedProposal: payload,
 		}
 	default: // protocol.VoteBundleTag
 		return message{
-			messageHandle: MessageHandle(msgHandle),
+			MessageHandle: messageIntMetadata{raw: msgHandle},
 			Tag:           tag,
 			UnauthenticatedBundle: unauthenticatedBundle{
 				Round:    Round,
@@ -152,7 +173,7 @@ func TestCryptoVerifierBuffers(t *testing.T) {
 	msgTypes := []protocol.Tag{protocol.AgreementVoteTag, protocol.ProposalPayloadTag, protocol.VoteBundleTag}
 
 	msgIDs := rand.Perm(20000)
-	usedMsgIDs := make(map[MessageHandle]struct{})
+	usedMsgIDs := make(map[int]struct{})
 	senderIdx := findSender(ledger, basics.Round(300), 0, 0, addresses, selections)
 	for _, msgType := range msgTypes {
 		assert.False(t, verifier.ChannelFull(msgType))
@@ -180,9 +201,9 @@ func TestCryptoVerifierBuffers(t *testing.T) {
 	for _, msgType := range msgTypes {
 		for i := getSelectorCapacity(msgType) * 5; i > 0; i-- {
 			msg := <-verifier.Verified(msgType)
-			_, has := usedMsgIDs[msg.messageHandle]
+			_, has := usedMsgIDs[msg.MessageHandle.(messageIntMetadata).raw]
 			assert.True(t, has)
-			delete(usedMsgIDs, msg.messageHandle)
+			delete(usedMsgIDs, msg.MessageHandle.(messageIntMetadata).raw)
 		}
 		assert.False(t, verifier.ChannelFull(msgType))
 		assert.Zero(t, len(verifier.Verified(msgType)))
@@ -230,8 +251,8 @@ func TestCryptoVerifierBuffers(t *testing.T) {
 		}
 		msgIDMutex.Lock()
 		defer msgIDMutex.Unlock()
-		_, has := usedMsgIDs[msg.messageHandle]
-		delete(usedMsgIDs, msg.messageHandle)
+		_, has := usedMsgIDs[msg.MessageHandle.(messageIntMetadata).raw]
+		delete(usedMsgIDs, msg.MessageHandle.(messageIntMetadata).raw)
 		return assert.True(t, has)
 	}
 
@@ -333,7 +354,7 @@ func BenchmarkCryptoVerifierProposalVertification(b *testing.B) {
 	c := verifier.Verified(protocol.ProposalPayloadTag)
 	request := cryptoProposalRequest{
 		message: message{
-			messageHandle:           MessageHandle(0),
+			MessageHandle:           messageIntMetadata{raw: 0},
 			Tag:                     protocol.ProposalPayloadTag,
 			UnauthenticatedProposal: proposals[0].unauthenticatedProposal,
 		},

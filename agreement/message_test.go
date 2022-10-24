@@ -84,15 +84,31 @@ func BenchmarkVoteDecoding(b *testing.B) {
 	}
 }
 
+type messageTestMetadata struct {
+	raw network.IncomingMessage
+}
+
+func (md *messageTestMetadata) MsgIsZero() bool {
+	return true
+}
+
+func (md *messageTestMetadata) Msgsize() int {
+	return 0
+}
+
+func (md *messageTestMetadata) MarshalMsg(b []byte) []byte {
+	return nil
+}
+
+func (md *messageTestMetadata) UnmarshalMsg(b []byte) ([]byte, error) {
+	return b, nil
+}
+
 // TestMessageBackwardCompatibility ensures MessageHandle field can be
 // properly decoded from message.
 // This test is only needed for agreement state serialization switch from reflection to msgp.
 func TestMessageBackwardCompatibility(t *testing.T) {
 	partitiontest.PartitionTest(t)
-
-	type messageMetadata struct {
-		raw network.IncomingMessage
-	}
 
 	encoded, err := base64.StdEncoding.DecodeString("iaZCdW5kbGWAr0NvbXBvdW5kTWVzc2FnZYKoUHJvcG9zYWyApFZvdGWArU1lc3NhZ2VIYW5kbGWAqFByb3Bvc2FsgKNUYWeiUFC1VW5hdXRoZW50aWNhdGVkQnVuZGxlgLdVbmF1dGhlbnRpY2F0ZWRQcm9wb3NhbICzVW5hdXRoZW50aWNhdGVkVm90ZYCkVm90ZYA=")
 	require.NoError(t, err)
@@ -107,18 +123,21 @@ func TestMessageBackwardCompatibility(t *testing.T) {
 	// fmt.Println(base64.StdEncoding.EncodeToString(result))
 
 	m1 := message{
-		messageHandle: &messageMetadata{raw: network.IncomingMessage{Tag: protocol.Tag("mytag"), Data: []byte("some data")}},
+		MessageHandle: &messageTestMetadata{raw: network.IncomingMessage{Tag: protocol.Tag("mytag"), Data: []byte("some data")}},
 		Tag:           protocol.ProposalPayloadTag,
 	}
+
+	// result := protocol.Encode(&m1)
+	// fmt.Printf("%s", hex.Dump(result))
 
 	var m2 message
 	err = protocol.Decode(encoded, &m2)
 	require.NoError(t, err)
 
-	var m3 message
-	err = protocol.DecodeReflect(encoded, &m3)
-	require.NoError(t, err)
+	// var m3 message
+	// err = protocol.DecodeReflect(encoded, &m3)
+	// require.NoError(t, err)
 
-	require.Equal(t, m2, m3)
+	// require.Equal(t, m2, m3)
 	require.Equal(t, m1, m2)
 }
