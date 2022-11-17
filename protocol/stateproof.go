@@ -36,9 +36,10 @@ const (
 // SortStateProofType implements sorting by StateProofType keys for
 // canonical encoding of maps in msgpack format.
 //msgp:ignore SortStateProofType
-//msgp:sort StateProofType SortStateProofType
+//msgp:sort StateProofType SortStateProofType StateProofTypeLess
 type SortStateProofType []StateProofType
 
-func (a SortStateProofType) Len() int           { return len(a) }
-func (a SortStateProofType) Less(i, j int) bool { return a[i] < a[j] }
-func (a SortStateProofType) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a SortStateProofType) Len() int             { return len(a) }
+func (a SortStateProofType) Less(i, j int) bool   { return a[i] < a[j] }
+func (a SortStateProofType) Swap(i, j int)        { a[i], a[j] = a[j], a[i] }
+func StateProofTypeLess(a, b StateProofType) bool { return a < b }
