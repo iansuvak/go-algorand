@@ -2511,9 +2511,9 @@ func (z *freshnessData) MsgIsZero() bool {
 // MarshalMsg implements msgp.Marshaler
 func (z *message) MarshalMsg(b []byte) (o []byte) {
 	o = msgp.Require(b, z.Msgsize())
-	// map header, size 9
+	// map header, size 8
 	// string "Bundle"
-	o = append(o, 0x89, 0xa6, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65)
+	o = append(o, 0x88, 0xa6, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65)
 	o = (*z).Bundle.MarshalMsg(o)
 	// string "CompoundMessage"
 	o = append(o, 0xaf, 0x43, 0x6f, 0x6d, 0x70, 0x6f, 0x75, 0x6e, 0x64, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65)
@@ -2524,9 +2524,6 @@ func (z *message) MarshalMsg(b []byte) (o []byte) {
 	// string "Vote"
 	o = append(o, 0xa4, 0x56, 0x6f, 0x74, 0x65)
 	o = (*z).CompoundMessage.Vote.MarshalMsg(o)
-	// string "MessageHandle"
-	o = append(o, 0xad, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65)
-	o = (*z).MessageHandle.MarshalMsg(o)
 	// string "Proposal"
 	o = append(o, 0xa8, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c)
 	o = (*z).Proposal.MarshalMsg(o)
@@ -2565,14 +2562,6 @@ func (z *message) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		if err != nil {
 			err = msgp.WrapError(err)
 			return
-		}
-		if zb0001 > 0 {
-			zb0001--
-			bts, err = (*z).MessageHandle.UnmarshalMsg(bts)
-			if err != nil {
-				err = msgp.WrapError(err, "struct-from-array", "MessageHandle")
-				return
-			}
 		}
 		if zb0001 > 0 {
 			zb0001--
@@ -2725,12 +2714,6 @@ func (z *message) UnmarshalMsg(bts []byte) (o []byte, err error) {
 				return
 			}
 			switch string(field) {
-			case "MessageHandle":
-				bts, err = (*z).MessageHandle.UnmarshalMsg(bts)
-				if err != nil {
-					err = msgp.WrapError(err, "MessageHandle")
-					return
-				}
 			case "Tag":
 				bts, err = (*z).Tag.UnmarshalMsg(bts)
 				if err != nil {
@@ -2863,13 +2846,13 @@ func (_ *message) CanUnmarshalMsg(z interface{}) bool {
 
 // Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
 func (z *message) Msgsize() (s int) {
-	s = 1 + 14 + (*z).MessageHandle.Msgsize() + 4 + (*z).Tag.Msgsize() + 5 + (*z).Vote.Msgsize() + 9 + (*z).Proposal.Msgsize() + 7 + (*z).Bundle.Msgsize() + 20 + (*z).UnauthenticatedVote.Msgsize() + 24 + (*z).UnauthenticatedProposal.Msgsize() + 22 + (*z).UnauthenticatedBundle.Msgsize() + 16 + 1 + 5 + (*z).CompoundMessage.Vote.Msgsize() + 9 + (*z).CompoundMessage.Proposal.Msgsize()
+	s = 1 + 4 + (*z).Tag.Msgsize() + 5 + (*z).Vote.Msgsize() + 9 + (*z).Proposal.Msgsize() + 7 + (*z).Bundle.Msgsize() + 20 + (*z).UnauthenticatedVote.Msgsize() + 24 + (*z).UnauthenticatedProposal.Msgsize() + 22 + (*z).UnauthenticatedBundle.Msgsize() + 16 + 1 + 5 + (*z).CompoundMessage.Vote.Msgsize() + 9 + (*z).CompoundMessage.Proposal.Msgsize()
 	return
 }
 
 // MsgIsZero returns whether this is a zero value
 func (z *message) MsgIsZero() bool {
-	return ((*z).MessageHandle.MsgIsZero()) && ((*z).Tag.MsgIsZero()) && ((*z).Vote.MsgIsZero()) && ((*z).Proposal.MsgIsZero()) && ((*z).Bundle.MsgIsZero()) && ((*z).UnauthenticatedVote.MsgIsZero()) && ((*z).UnauthenticatedProposal.MsgIsZero()) && ((*z).UnauthenticatedBundle.MsgIsZero()) && (((*z).CompoundMessage.Vote.MsgIsZero()) && ((*z).CompoundMessage.Proposal.MsgIsZero()))
+	return ((*z).Tag.MsgIsZero()) && ((*z).Vote.MsgIsZero()) && ((*z).Proposal.MsgIsZero()) && ((*z).Bundle.MsgIsZero()) && ((*z).UnauthenticatedVote.MsgIsZero()) && ((*z).UnauthenticatedProposal.MsgIsZero()) && ((*z).UnauthenticatedBundle.MsgIsZero()) && (((*z).CompoundMessage.Vote.MsgIsZero()) && ((*z).CompoundMessage.Proposal.MsgIsZero()))
 }
 
 // MarshalMsg implements msgp.Marshaler
