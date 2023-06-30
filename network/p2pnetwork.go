@@ -18,6 +18,8 @@ package network
 
 import (
 	"context"
+	"encoding/binary"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -123,6 +125,9 @@ func (n *P2PNetwork) streamHandler(ctx context.Context, peer peer.ID, stream net
 		conn:       &wsPeerConnP2PImpl{stream: stream},
 	}
 	wsp.init(n.config, outgoingMessagesBufferSize)
+	n.peersLock.Lock()
+	n.peers[peer] = wsp
+	n.peersLock.Unlock()
 }
 
 func (n *P2PNetwork) wsPeerRemoteClose(peer *wsPeer, reason disconnectReason) {}
@@ -133,16 +138,33 @@ type wsPeerConnP2PImpl struct {
 
 func (c *wsPeerConnP2PImpl) RemoteAddrString() string {
 	return c.stream.Conn().RemoteMultiaddr().String()
-
 }
+
 func (c *wsPeerConnP2PImpl) NextReader() (int, io.Reader, error) {
 	// XXX maybe we should use our websockets library?
-	return websocket.BinaryMessage, c.stream, nil
+	var lenbuf [4]byte
+	_, err := io.ReadFull(c.stream, lenbuf[:])
+	if err != nil {
+		return 0, nil, err
+	}
+	msglen := binary.BigEndian.Uint32(lenbuf[:])
+	if msglen > MaxMessageLength {
+		return 0, nil, fmt.Errorf("message too long: %d", msglen)
+	}
+	// return io.Reader that only reads the next msglen bytes
+	return websocket.BinaryMessage, io.LimitReader(c.stream, int64(msglen)), nil
 }
 
-func (c *wsPeerConnP2PImpl) WriteMessage(int, []byte) error {
+func (c *wsPeerConnP2PImpl) WriteMessage(_ int, buf []byte) error {
 	// XXX maybe we should use our websockets library?
-	return nil
+	// write encoding of the length
+	var lenbuf [4]byte
+	binary.BigEndian.PutUint32(lenbuf[:], uint32(len(buf)))
+	c.stream.Write(lenbuf[:])
+
+	// write message
+	_, err := c.stream.Write(buf)
+	return err
 }
 
 func (c *wsPeerConnP2PImpl) CloseWithMessage([]byte, time.Time) error {
