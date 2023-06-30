@@ -346,6 +346,16 @@ func (nnni *nopeNodeInfo) IsParticipating() bool {
 	return false
 }
 
+type broadcaster struct {
+	ctx                    context.Context
+	log                    logging.Logger
+	config                 config.Local
+	broadcastQueueHighPrio chan broadcastRequest
+	broadcastQueueBulk     chan broadcastRequest
+	// slowWritingPeerMonitorInterval defines the interval between two consecutive tests for slow peer writing
+	slowWritingPeerMonitorInterval time.Duration
+}
+
 // WebsocketNetwork implements GossipNode
 type WebsocketNetwork struct {
 	listener net.Listener
@@ -372,8 +382,7 @@ type WebsocketNetwork struct {
 	peers              []*wsPeer
 	peersChangeCounter int32 // peersChangeCounter is an atomic variable that increases on each change to the peers. It helps avoiding taking the peersLock when checking if the peers list was modified.
 
-	broadcastQueueHighPrio chan broadcastRequest
-	broadcastQueueBulk     chan broadcastRequest
+	broadcaster broadcaster
 
 	phonebook Phonebook
 
@@ -412,9 +421,6 @@ type WebsocketNetwork struct {
 
 	// wsMaxHeaderBytes is the maximum accepted size of the header prior to upgrading to websocket connection.
 	wsMaxHeaderBytes int64
-
-	// slowWritingPeerMonitorInterval defines the interval between two consecutive tests for slow peer writing
-	slowWritingPeerMonitorInterval time.Duration
 
 	requestsTracker *RequestTracker
 	requestsLogger  *RequestLogger
@@ -544,7 +550,10 @@ func (wn *WebsocketNetwork) BroadcastArray(ctx context.Context, tags []protocol.
 	if wn.config.DisableNetworking {
 		return nil
 	}
+	return wn.broadcaster.BroadcastArray(ctx, tags, data, wait, except)
+}
 
+func (wn *broadcaster) BroadcastArray(ctx context.Context, tags []protocol.Tag, data [][]byte, wait bool, except Peer) error {
 	if len(tags) != len(data) {
 		return errBcastInvalidArray
 	}
@@ -789,15 +798,20 @@ func (wn *WebsocketNetwork) setup() {
 
 	wn.identityTracker = NewIdentityTracker()
 
-	wn.broadcastQueueHighPrio = make(chan broadcastRequest, wn.outgoingMessagesBufferSize)
-	wn.broadcastQueueBulk = make(chan broadcastRequest, 100)
+	wn.broadcaster = broadcaster{
+		ctx:                    wn.ctx,
+		log:                    wn.log,
+		config:                 wn.config,
+		broadcastQueueHighPrio: make(chan broadcastRequest, wn.outgoingMessagesBufferSize),
+		broadcastQueueBulk:     make(chan broadcastRequest, 100),
+	}
 	wn.meshUpdateRequests = make(chan meshRequest, 5)
 	wn.readyChan = make(chan struct{})
 	wn.tryConnectAddrs = make(map[string]int64)
 	wn.eventualReadyDelay = time.Minute
 	wn.prioTracker = newPrioTracker(wn)
-	if wn.slowWritingPeerMonitorInterval == 0 {
-		wn.slowWritingPeerMonitorInterval = slowWritingPeerMonitorInterval
+	if wn.broadcaster.slowWritingPeerMonitorInterval == 0 {
+		wn.broadcaster.slowWritingPeerMonitorInterval = slowWritingPeerMonitorInterval
 	}
 
 	readBufferLen := wn.config.IncomingConnectionsLimit + wn.config.GossipFanout
@@ -912,7 +926,7 @@ func (wn *WebsocketNetwork) Start() {
 		go wn.messageHandlerThread(wn.peersConnectivityCheckTicker.C)
 	}
 	wn.wg.Add(1)
-	go wn.broadcastThread()
+	go wn.broadcaster.broadcastThread(wn.wg.Done, wn)
 	if wn.prioScheme != nil {
 		wn.wg.Add(1)
 		go wn.prioWeightRefresh()
@@ -1386,16 +1400,26 @@ func (wn *WebsocketNetwork) sendFilterMessage(msg IncomingMessage) {
 	}
 }
 
-func (wn *WebsocketNetwork) broadcastThread() {
-	defer wn.wg.Done()
+func (wn *WebsocketNetwork) getPeersChangeCounter() *int32 {
+	return &wn.peersChangeCounter
+}
+
+type networkPeerManager interface {
+	peerSnapshot(dest []*wsPeer) ([]*wsPeer, int32)
+	checkSlowWritingPeers()
+	getPeersChangeCounter() *int32
+}
+
+func (wn *broadcaster) broadcastThread(wgDone func(), pm networkPeerManager) {
+	defer wgDone()
 
 	slowWritingPeerCheckTicker := time.NewTicker(wn.slowWritingPeerMonitorInterval)
 	defer slowWritingPeerCheckTicker.Stop()
-	peers, lastPeersChangeCounter := wn.peerSnapshot([]*wsPeer{})
+	peers, lastPeersChangeCounter := pm.peerSnapshot([]*wsPeer{})
 	// updatePeers update the peers list if their peer change counter has changed.
 	updatePeers := func() {
-		if curPeersChangeCounter := atomic.LoadInt32(&wn.peersChangeCounter); curPeersChangeCounter != lastPeersChangeCounter {
-			peers, lastPeersChangeCounter = wn.peerSnapshot(peers)
+		if curPeersChangeCounter := atomic.LoadInt32(pm.getPeersChangeCounter()); curPeersChangeCounter != lastPeersChangeCounter {
+			peers, lastPeersChangeCounter = pm.peerSnapshot(peers)
 		}
 	}
 
@@ -1486,7 +1510,7 @@ func (wn *WebsocketNetwork) broadcastThread() {
 			}
 			wn.innerBroadcast(request, true, peers)
 		case <-slowWritingPeerCheckTicker.C:
-			wn.checkSlowWritingPeers()
+			pm.checkSlowWritingPeers()
 			continue
 		case request := <-wn.broadcastQueueBulk:
 			// check if peers need to be updated, since we've been waiting a while.
@@ -1527,7 +1551,7 @@ func (wn *WebsocketNetwork) peerSnapshot(dest []*wsPeer) ([]*wsPeer, int32) {
 
 // preparePeerData prepares batches of data for sending.
 // It performs optional zstd compression for proposal massages
-func (wn *WebsocketNetwork) preparePeerData(request broadcastRequest, prio bool, peers []*wsPeer) ([][]byte, [][]byte, []crypto.Digest, bool) {
+func (wn *broadcaster) preparePeerData(request broadcastRequest, prio bool, peers []*wsPeer) ([][]byte, [][]byte, []crypto.Digest, bool) {
 	// determine if there is a payload proposal and peers supporting compressed payloads
 	wantCompression := false
 	containsPrioPPTag := false
@@ -1577,7 +1601,7 @@ func (wn *WebsocketNetwork) preparePeerData(request broadcastRequest, prio bool,
 }
 
 // prio is set if the broadcast is a high-priority broadcast.
-func (wn *WebsocketNetwork) innerBroadcast(request broadcastRequest, prio bool, peers []*wsPeer) {
+func (wn *broadcaster) innerBroadcast(request broadcastRequest, prio bool, peers []*wsPeer) {
 	if request.done != nil {
 		defer close(request.done)
 	}
