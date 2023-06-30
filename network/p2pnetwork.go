@@ -147,7 +147,14 @@ func (n *P2PNetwork) streamHandler(ctx context.Context, peer peer.ID, stream net
 	atomic.AddInt32(&n.peersChangeCounter, 1)
 }
 
-func (n *P2PNetwork) wsPeerRemoteClose(peer *wsPeer, reason disconnectReason) {}
+// called from wsPeer to report that it has closed
+func (n *P2PNetwork) wsPeerRemoteClose(peer *wsPeer, reason disconnectReason) {
+	n.peersLock.Lock()
+	remotePeerID := peer.conn.(*wsPeerConnP2PImpl).stream.Conn().RemotePeer()
+	delete(n.peers, remotePeerID)
+	n.peersLock.Unlock()
+	atomic.AddInt32(&n.peersChangeCounter, 1)
+}
 
 func (n *P2PNetwork) peerSnapshot(dest []*wsPeer) ([]*wsPeer, int32) {
 	n.peersLock.RLock()
@@ -304,11 +311,7 @@ func (n *P2PNetwork) Broadcast(ctx context.Context, tag protocol.Tag, data []byt
 	}
 
 	// use legacy network
-	return n.legacyBroadcast(ctx, tag, data, wait, except)
-}
-
-func (n *P2PNetwork) legacyBroadcast(ctx context.Context, tag protocol.Tag, data []byte, wait bool, except Peer) error {
-	return nil
+	return n.broadcaster.BroadcastArray(ctx, []protocol.Tag{tag}, [][]byte{data}, wait, except)
 }
 
 // Relay message
@@ -319,7 +322,7 @@ func (n *P2PNetwork) Relay(ctx context.Context, tag protocol.Tag, data []byte, w
 	}
 
 	// use legacy network
-	return n.legacyBroadcast(ctx, tag, data, wait, except)
+	return n.broadcaster.BroadcastArray(ctx, []protocol.Tag{tag}, [][]byte{data}, wait, except)
 }
 
 // Disconnect from a peer, probably due to protocol errors.

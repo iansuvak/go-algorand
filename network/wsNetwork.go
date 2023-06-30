@@ -346,16 +346,6 @@ func (nnni *nopeNodeInfo) IsParticipating() bool {
 	return false
 }
 
-type broadcaster struct {
-	ctx                    context.Context
-	log                    logging.Logger
-	config                 config.Local
-	broadcastQueueHighPrio chan broadcastRequest
-	broadcastQueueBulk     chan broadcastRequest
-	// slowWritingPeerMonitorInterval defines the interval between two consecutive tests for slow peer writing
-	slowWritingPeerMonitorInterval time.Duration
-}
-
 // WebsocketNetwork implements GossipNode
 type WebsocketNetwork struct {
 	listener net.Listener
@@ -502,6 +492,26 @@ type broadcastRequest struct {
 	ctx         context.Context
 }
 
+type broadcaster struct {
+	ctx                    context.Context
+	log                    logging.Logger
+	config                 config.Local
+	broadcastQueueHighPrio chan broadcastRequest
+	broadcastQueueBulk     chan broadcastRequest
+	// slowWritingPeerMonitorInterval defines the interval between two consecutive tests for slow peer writing
+	slowWritingPeerMonitorInterval time.Duration
+}
+
+type networkPeerManager interface {
+	peerSnapshot(dest []*wsPeer) ([]*wsPeer, int32)
+	checkSlowWritingPeers()
+	getPeersChangeCounter() *int32
+}
+
+func (wn *WebsocketNetwork) getPeersChangeCounter() *int32 {
+	return &wn.peersChangeCounter
+}
+
 // Address returns a string and whether that is a 'final' address or guessed.
 // Part of GossipNode interface
 func (wn *WebsocketNetwork) Address() (string, bool) {
@@ -539,21 +549,17 @@ func (wn *WebsocketNetwork) Broadcast(ctx context.Context, tag protocol.Tag, dat
 	dataArray[0] = data
 	tagArray := make([]protocol.Tag, 1, 1)
 	tagArray[0] = tag
-	return wn.BroadcastArray(ctx, tagArray, dataArray, wait, except)
+	return wn.broadcaster.BroadcastArray(ctx, tagArray, dataArray, wait, except)
 }
 
 // BroadcastArray sends an array of messages.
 // If except is not nil then we will not send it to that neighboring Peer.
 // if wait is true then the call blocks until the packet has actually been sent to all neighbors.
 // TODO: add `priority` argument so that we don't have to guess it based on tag
-func (wn *WebsocketNetwork) BroadcastArray(ctx context.Context, tags []protocol.Tag, data [][]byte, wait bool, except Peer) error {
+func (wn *broadcaster) BroadcastArray(ctx context.Context, tags []protocol.Tag, data [][]byte, wait bool, except Peer) error {
 	if wn.config.DisableNetworking {
 		return nil
 	}
-	return wn.broadcaster.BroadcastArray(ctx, tags, data, wait, except)
-}
-
-func (wn *broadcaster) BroadcastArray(ctx context.Context, tags []protocol.Tag, data [][]byte, wait bool, except Peer) error {
 	if len(tags) != len(data) {
 		return errBcastInvalidArray
 	}
@@ -612,7 +618,7 @@ func (wn *WebsocketNetwork) Relay(ctx context.Context, tag protocol.Tag, data []
 // RelayArray relays array of messages
 func (wn *WebsocketNetwork) RelayArray(ctx context.Context, tags []protocol.Tag, data [][]byte, wait bool, except Peer) error {
 	if wn.relayMessages {
-		return wn.BroadcastArray(ctx, tags, data, wait, except)
+		return wn.broadcaster.BroadcastArray(ctx, tags, data, wait, except)
 	}
 	return nil
 }
@@ -1398,16 +1404,6 @@ func (wn *WebsocketNetwork) sendFilterMessage(msg IncomingMessage) {
 	if err != nil && err != errBcastQFull {
 		wn.log.Warnf("WebsocketNetwork.sendFilterMessage: WebsocketNetwork.Broadcast returned unexpected error %v", err)
 	}
-}
-
-func (wn *WebsocketNetwork) getPeersChangeCounter() *int32 {
-	return &wn.peersChangeCounter
-}
-
-type networkPeerManager interface {
-	peerSnapshot(dest []*wsPeer) ([]*wsPeer, int32)
-	checkSlowWritingPeers()
-	getPeersChangeCounter() *int32
 }
 
 func (wn *broadcaster) broadcastThread(wgDone func(), pm networkPeerManager) {
