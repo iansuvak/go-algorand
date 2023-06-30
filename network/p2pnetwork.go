@@ -32,6 +32,7 @@ import (
 	"github.com/algorand/go-algorand/logging"
 	"github.com/algorand/go-algorand/network/p2p"
 	"github.com/algorand/go-algorand/protocol"
+	"github.com/algorand/go-deadlock"
 	"github.com/algorand/websocket"
 
 	"github.com/labstack/gommon/log"
@@ -71,7 +72,7 @@ type P2PNetwork struct {
 	broadcaster        broadcaster
 	wsReadBuffer       chan IncomingMessage
 	peers              map[peer.ID]*wsPeer
-	peersLock          sync.RWMutex
+	peersLock          deadlock.RWMutex
 	peersChangeCounter int32
 }
 
