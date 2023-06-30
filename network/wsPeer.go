@@ -36,6 +36,7 @@ import (
 	"github.com/algorand/go-algorand/config"
 	"github.com/algorand/go-algorand/crypto"
 	"github.com/algorand/go-algorand/data/basics"
+	"github.com/algorand/go-algorand/logging"
 	"github.com/algorand/go-algorand/protocol"
 	"github.com/algorand/go-algorand/util"
 	"github.com/algorand/go-algorand/util/metrics"
@@ -119,15 +120,31 @@ var defaultSendMessageTags = map[protocol.Tag]bool{
 
 // interface allows substituting debug implementation for *websocket.Conn
 type wsPeerWebsocketConn interface {
-	RemoteAddr() net.Addr
+	RemoteAddrString() string
 	NextReader() (int, io.Reader, error)
 	WriteMessage(int, []byte) error
-	WriteControl(int, []byte, time.Time) error
+	CloseWithMessage([]byte, time.Time) error
 	SetReadLimit(int64)
 	CloseWithoutFlush() error
-	SetPingHandler(h func(appData string) error)
-	SetPongHandler(h func(appData string) error)
+	//SetPingHandler(h func(appData string) error)
+	//SetPongHandler(h func(appData string) error)
 	wrappedConn
+}
+
+type wsPeerWebsocketConnImpl struct {
+	*websocket.Conn
+}
+
+func (c wsPeerWebsocketConnImpl) RemoteAddrString() string {
+	addr := c.RemoteAddr()
+	if addr == nil {
+		return ""
+	}
+	return addr.String()
+}
+
+func (c wsPeerWebsocketConnImpl) CloseWithMessage(msg []byte, deadline time.Time) error {
+	return c.WriteControl(websocket.CloseMessage, msg, deadline)
 }
 
 type wrappedConn interface {
@@ -145,7 +162,10 @@ type sendMessage struct {
 
 // wsPeerCore also works for non-connected peers we want to do HTTP GET from
 type wsPeerCore struct {
-	net           *WebsocketNetwork
+	net           GossipNode
+	netCtx        context.Context
+	log           logging.Logger
+	readBuffer    chan IncomingMessage
 	rootURL       string
 	originAddress string // incoming connection remote host
 	client        http.Client
@@ -328,6 +348,21 @@ type TCPInfoUnicastPeer interface {
 func makePeerCore(net *WebsocketNetwork, rootURL string, roundTripper http.RoundTripper, originAddress string) wsPeerCore {
 	return wsPeerCore{
 		net:           net,
+		netCtx:        net.ctx,
+		log:           net.log,
+		readBuffer:    net.readBuffer,
+		rootURL:       rootURL,
+		originAddress: originAddress,
+		client:        http.Client{Transport: roundTripper},
+	}
+}
+
+func makeP2PPeerCore(ctx context.Context, net *P2PNetwork, rootURL string, roundTripper http.RoundTripper, originAddress string) wsPeerCore {
+	return wsPeerCore{
+		net:           net,
+		netCtx:        ctx,
+		log:           net.log,
+		readBuffer:    net.wsReadBuffer,
 		rootURL:       rootURL,
 		originAddress: originAddress,
 		client:        http.Client{Transport: roundTripper},
@@ -417,7 +452,7 @@ func (wp *wsPeer) Respond(ctx context.Context, reqMsg IncomingMessage, outMsg Ou
 	case wp.sendBufferBulk <- sendMessages{msgs: msg, onRelease: outMsg.OnRelease}:
 	case <-wp.closing:
 		outMsg.OnRelease()
-		wp.net.log.Debugf("peer closing %s", wp.conn.RemoteAddr().String())
+		wp.log.Debugf("peer closing %s", wp.conn.RemoteAddrString())
 		return
 	case <-ctx.Done():
 		outMsg.OnRelease()
@@ -428,7 +463,7 @@ func (wp *wsPeer) Respond(ctx context.Context, reqMsg IncomingMessage, outMsg Ou
 
 // setup values not trivially assigned
 func (wp *wsPeer) init(config config.Local, sendBufferLength int) {
-	wp.net.log.Debugf("wsPeer init outgoing=%v %#v", wp.outgoing, wp.rootURL)
+	wp.log.Debugf("wsPeer init outgoing=%v %#v", wp.outgoing, wp.rootURL)
 	wp.closing = make(chan struct{})
 	wp.sendBufferHighPrio = make(chan sendMessages, sendBufferLength)
 	wp.sendBufferBulk = make(chan sendMessages, sendBufferLength)
@@ -464,7 +499,7 @@ func (wp *wsPeer) reportReadErr(err error) {
 	// only report error if we haven't already closed the peer
 	if atomic.LoadInt32(&wp.didInnerClose) == 0 {
 		_, _, line, _ := runtime.Caller(1)
-		wp.net.log.Warnf("peer[%s] line=%d read err: %s", wp.conn.RemoteAddr().String(), line, err)
+		wp.log.Warnf("peer[%s] line=%d read err: %s", wp.conn.RemoteAddrString(), line, err)
 		networkConnectionsDroppedTotal.Inc(map[string]string{"reason": "reader err"})
 	}
 }
@@ -502,7 +537,7 @@ func (wp *wsPeer) readLoop() {
 			return
 		}
 		if mtype != websocket.BinaryMessage {
-			wp.net.log.Errorf("peer sent non websocket-binary message: %#v", mtype)
+			wp.log.Errorf("peer sent non websocket-binary message: %#v", mtype)
 			networkConnectionsDroppedTotal.Inc(map[string]string{"reason": "protocol"})
 			return
 		}
@@ -520,7 +555,7 @@ func (wp *wsPeer) readLoop() {
 
 			// This peers has sent us more responses than we have requested.  This is a protocol violation and we should disconnect.
 			if atomic.LoadInt64(&wp.outstandingTopicRequests) < 0 {
-				wp.net.log.Errorf("wsPeer readloop: peer %s sent TS response without a request", wp.conn.RemoteAddr().String())
+				wp.log.Errorf("wsPeer readloop: peer %s sent TS response without a request", wp.conn.RemoteAddrString())
 				networkConnectionsDroppedTotal.Inc(map[string]string{"reason": "unrequestedTS"})
 				cleanupCloseError = disconnectUnexpectedTopicResp
 				return
@@ -529,11 +564,11 @@ func (wp *wsPeer) readLoop() {
 			// Peer sent us a response to a request we made but we've already timed out -- discard
 			n, err = io.Copy(io.Discard, reader)
 			if err != nil {
-				wp.net.log.Infof("wsPeer readloop: could not discard timed-out TS message from %s : %s", wp.conn.RemoteAddr().String(), err)
+				wp.log.Infof("wsPeer readloop: could not discard timed-out TS message from %s : %s", wp.conn.RemoteAddrString(), err)
 				wp.reportReadErr(err)
 				return
 			}
-			wp.net.log.Warnf("wsPeer readLoop: received a TS response for a stale request from %s. %d bytes discarded", wp.conn.RemoteAddr().String(), n)
+			wp.log.Warnf("wsPeer readLoop: received a TS response for a stale request from %s. %d bytes discarded", wp.conn.RemoteAddrString(), n)
 			continue
 		}
 
@@ -582,18 +617,18 @@ func (wp *wsPeer) readLoop() {
 			atomic.AddInt64(&wp.outstandingTopicRequests, -1)
 			topics, err := UnmarshallTopics(msg.Data)
 			if err != nil {
-				wp.net.log.Warnf("wsPeer readLoop: could not read the message from: %s %s", wp.conn.RemoteAddr().String(), err)
+				wp.log.Warnf("wsPeer readLoop: could not read the message from: %s %s", wp.conn.RemoteAddrString(), err)
 				continue
 			}
 			requestHash, found := topics.GetValue(requestHashKey)
 			if !found {
-				wp.net.log.Warnf("wsPeer readLoop: message from %s is missing the %s", wp.conn.RemoteAddr().String(), requestHashKey)
+				wp.log.Warnf("wsPeer readLoop: message from %s is missing the %s", wp.conn.RemoteAddrString(), requestHashKey)
 				continue
 			}
 			hashKey, _ := binary.Uvarint(requestHash)
 			channel, found := wp.getAndRemoveResponseChannel(hashKey)
 			if !found {
-				wp.net.log.Warnf("wsPeer readLoop: received a message response from %s for a stale request", wp.conn.RemoteAddr().String())
+				wp.log.Warnf("wsPeer readLoop: received a message response from %s for a stale request", wp.conn.RemoteAddrString())
 				continue
 			}
 
@@ -601,7 +636,7 @@ func (wp *wsPeer) readLoop() {
 			case channel <- &Response{Topics: topics}:
 				// do nothing. writing was successful.
 			default:
-				wp.net.log.Warn("wsPeer readLoop: channel blocked. Could not pass the response to the requester", wp.conn.RemoteAddr().String())
+				wp.log.Warn("wsPeer readLoop: channel blocked. Could not pass the response to the requester", wp.conn.RemoteAddrString())
 			}
 			continue
 		case protocol.MsgDigestSkipTag:
@@ -625,28 +660,28 @@ func (wp *wsPeer) readLoop() {
 		}
 		if len(msg.Data) > 0 && wp.incomingMsgFilter != nil && dedupSafeTag(msg.Tag) {
 			if wp.incomingMsgFilter.CheckIncomingMessage(msg.Tag, msg.Data, true, true) {
-				//wp.net.log.Debugf("dropped incoming duplicate %s(%d)", msg.Tag, len(msg.Data))
+				//wp.log.Debugf("dropped incoming duplicate %s(%d)", msg.Tag, len(msg.Data))
 				duplicateNetworkMessageReceivedTotal.Inc(nil)
 				duplicateNetworkMessageReceivedBytesTotal.AddUint64(uint64(len(msg.Data)+len(msg.Tag)), nil)
 				// drop message, skip adding it to queue
 				continue
 			}
 		}
-		//wp.net.log.Debugf("got msg %d bytes from %s", len(msg.Data), wp.conn.RemoteAddr().String())
+		//wp.log.Debugf("got msg %d bytes from %s", len(msg.Data), wp.conn.RemoteAddrString())
 
 		// Wait for a previous message from this peer to be processed,
 		// to achieve fairness in wp.net.readBuffer.
 		select {
 		case <-wp.processed:
 		case <-wp.closing:
-			wp.net.log.Debugf("peer closing %s", wp.conn.RemoteAddr().String())
+			wp.log.Debugf("peer closing %s", wp.conn.RemoteAddrString())
 			return
 		}
 
 		select {
-		case wp.net.readBuffer <- msg:
+		case wp.readBuffer <- msg:
 		case <-wp.closing:
-			wp.net.log.Debugf("peer closing %s", wp.conn.RemoteAddr().String())
+			wp.log.Debugf("peer closing %s", wp.conn.RemoteAddrString())
 			return
 		}
 	}
@@ -658,7 +693,7 @@ func (wp *wsPeer) handleMessageOfInterest(msg IncomingMessage) (close bool, reas
 	// decode the message, and ensure it's a valid message.
 	msgTagsMap, err := unmarshallMessageOfInterest(msg.Data)
 	if err != nil {
-		wp.net.log.Warnf("wsPeer handleMessageOfInterest: could not unmarshall message from: %s %v", wp.conn.RemoteAddr().String(), err)
+		wp.log.Warnf("wsPeer handleMessageOfInterest: could not unmarshall message from: %s %v", wp.conn.RemoteAddrString(), err)
 		return true, disconnectBadData
 	}
 	msgs := make([]sendMessage, 1, 1)
@@ -677,7 +712,7 @@ func (wp *wsPeer) handleMessageOfInterest(msg IncomingMessage) (close bool, reas
 	case wp.sendBufferHighPrio <- sm:
 		return
 	case <-wp.closing:
-		wp.net.log.Debugf("peer closing %s", wp.conn.RemoteAddr().String())
+		wp.log.Debugf("peer closing %s", wp.conn.RemoteAddrString())
 		return true, disconnectReasonNone
 	default:
 	}
@@ -686,7 +721,7 @@ func (wp *wsPeer) handleMessageOfInterest(msg IncomingMessage) (close bool, reas
 	case wp.sendBufferHighPrio <- sm:
 	case wp.sendBufferBulk <- sm:
 	case <-wp.closing:
-		wp.net.log.Debugf("peer closing %s", wp.conn.RemoteAddr().String())
+		wp.log.Debugf("peer closing %s", wp.conn.RemoteAddrString())
 		return true, disconnectReasonNone
 	}
 	return
@@ -703,12 +738,12 @@ func (wp *wsPeer) handleFilterMessage(msg IncomingMessage) {
 		return
 	}
 	if len(msg.Data) != crypto.DigestSize {
-		wp.net.log.Warnf("bad filter message size %d", len(msg.Data))
+		wp.log.Warnf("bad filter message size %d", len(msg.Data))
 		return
 	}
 	var digest crypto.Digest
 	copy(digest[:], msg.Data)
-	//wp.net.log.Debugf("add filter %v", digest)
+	//wp.log.Debugf("add filter %v", digest)
 	has := wp.outgoingMsgFilter.CheckDigest(digest, true, true)
 	if has {
 		// Count that this peer has sent us duplicate filter messages: this means it received the same
@@ -741,7 +776,7 @@ func (wp *wsPeer) writeLoopSend(msgs sendMessages) disconnectReason {
 
 func (wp *wsPeer) writeLoopSendMsg(msg sendMessage) disconnectReason {
 	if len(msg.data) > MaxMessageLength {
-		wp.net.log.Errorf("trying to send a message longer than we would receive: %d > %d tag=%s", len(msg.data), MaxMessageLength, string(msg.data[0:2]))
+		wp.log.Errorf("trying to send a message longer than we would receive: %d > %d tag=%s", len(msg.data), MaxMessageLength, string(msg.data[0:2]))
 		// just drop it, don't break the connection
 		return disconnectReasonNone
 	}
@@ -762,7 +797,7 @@ func (wp *wsPeer) writeLoopSendMsg(msg sendMessage) disconnectReason {
 	now := time.Now()
 	msgWaitDuration := now.Sub(msg.enqueued)
 	if msgWaitDuration > maxMessageQueueDuration {
-		wp.net.log.Warnf("peer stale enqueued message %dms", msgWaitDuration.Nanoseconds()/1000000)
+		wp.log.Warnf("peer stale enqueued message %dms", msgWaitDuration.Nanoseconds()/1000000)
 		networkConnectionsDroppedTotal.Inc(map[string]string{"reason": "stale message"})
 		return disconnectStaleWrite
 	}
@@ -772,7 +807,7 @@ func (wp *wsPeer) writeLoopSendMsg(msg sendMessage) disconnectReason {
 	err := wp.conn.WriteMessage(websocket.BinaryMessage, msg.data)
 	if err != nil {
 		if atomic.LoadInt32(&wp.didInnerClose) == 0 {
-			wp.net.log.Warn("peer write error ", err)
+			wp.log.Warn("peer write error ", err)
 			networkConnectionsDroppedTotal.Inc(map[string]string{"reason": "write err"})
 		}
 		return disconnectWriteError
@@ -838,7 +873,7 @@ func (wp *wsPeer) writeNonBlockMsgs(ctx context.Context, data [][]byte, highPrio
 	includeIndices := make([]int, 0, len(data))
 	for i := range data {
 		if wp.outgoingMsgFilter != nil && len(data[i]) > messageFilterSize && wp.outgoingMsgFilter.CheckDigest(digest[i], false, false) {
-			//wp.net.log.Debugf("msg drop as outbound dup %s(%d) %v", string(data[:2]), len(data)-2, digest)
+			//wp.log.Debugf("msg drop as outbound dup %s(%d) %v", string(data[:2]), len(data)-2, digest)
 			// peer has notified us it doesn't need this message
 			outgoingNetworkMessageFilteredOutTotal.Inc(nil)
 			outgoingNetworkMessageFilteredOutBytesTotal.AddUint64(uint64(len(data)), nil)
@@ -912,7 +947,7 @@ func (wp *wsPeer) pingTimes() (lastPingSent time.Time, lastPingRoundTripTime tim
 // called when the connection had an error or closed remotely
 func (wp *wsPeer) internalClose(reason disconnectReason) {
 	if atomic.CompareAndSwapInt32(&wp.didSignalClose, 0, 1) {
-		wp.net.peerRemoteClose(wp, reason)
+		wp.net.wsPeerRemoteClose(wp, reason)
 	}
 	wp.Close(time.Now().Add(peerDisconnectionAckDuration))
 }
@@ -922,13 +957,13 @@ func (wp *wsPeer) Close(deadline time.Time) {
 	atomic.StoreInt32(&wp.didSignalClose, 1)
 	if atomic.CompareAndSwapInt32(&wp.didInnerClose, 0, 1) {
 		close(wp.closing)
-		err := wp.conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""), deadline)
+		err := wp.conn.CloseWithMessage(websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""), deadline)
 		if err != nil {
-			wp.net.log.Infof("failed to write CloseMessage to connection for %s", wp.conn.RemoteAddr().String())
+			wp.log.Infof("failed to write CloseMessage to connection for %s", wp.conn.RemoteAddrString())
 		}
 		err = wp.conn.CloseWithoutFlush()
 		if err != nil {
-			wp.net.log.Infof("failed to CloseWithoutFlush to connection for %s", wp.conn.RemoteAddr().String())
+			wp.log.Infof("failed to CloseWithoutFlush to connection for %s", wp.conn.RemoteAddrString())
 		}
 	}
 
@@ -1015,7 +1050,7 @@ func (wp *wsPeer) Request(ctx context.Context, tag Tag, topics Topics) (resp *Re
 	case wp.sendBufferBulk <- sendMessages{msgs: msg}:
 		atomic.AddInt64(&wp.outstandingTopicRequests, 1)
 	case <-wp.closing:
-		e = fmt.Errorf("peer closing %s", wp.conn.RemoteAddr().String())
+		e = fmt.Errorf("peer closing %s", wp.conn.RemoteAddrString())
 		return
 	case <-ctx.Done():
 		return resp, ctx.Err()
@@ -1026,7 +1061,7 @@ func (wp *wsPeer) Request(ctx context.Context, tag Tag, topics Topics) (resp *Re
 	case resp = <-responseChannel:
 		return resp, nil
 	case <-wp.closing:
-		e = fmt.Errorf("peer closing %s", wp.conn.RemoteAddr().String())
+		e = fmt.Errorf("peer closing %s", wp.conn.RemoteAddrString())
 		return
 	case <-ctx.Done():
 		return resp, ctx.Err()
@@ -1073,9 +1108,9 @@ func (wp *wsPeer) setPeerData(key string, value interface{}) {
 }
 
 func (wp *wsPeer) sendMessagesOfInterest(messagesOfInterestGeneration uint32, messagesOfInterestEnc []byte) {
-	err := wp.Unicast(wp.net.ctx, messagesOfInterestEnc, protocol.MsgOfInterestTag)
+	err := wp.Unicast(wp.netCtx, messagesOfInterestEnc, protocol.MsgOfInterestTag)
 	if err != nil {
-		wp.net.log.Errorf("ws send msgOfInterest: %v", err)
+		wp.log.Errorf("ws send msgOfInterest: %v", err)
 	} else {
 		atomic.StoreUint32(&wp.messagesOfInterestGeneration, messagesOfInterestGeneration)
 	}

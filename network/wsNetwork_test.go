@@ -760,9 +760,11 @@ func TestAddrToGossipAddr(t *testing.T) {
 type nopConn struct{}
 
 func (nc *nopConn) RemoteAddr() net.Addr                        { return nil }
+func (nc *nopConn) RemoteAddrString() string                    { return "" }
 func (nc *nopConn) NextReader() (int, io.Reader, error)         { return 0, nil, nil }
 func (nc *nopConn) WriteMessage(int, []byte) error              { return nil }
 func (nc *nopConn) WriteControl(int, []byte, time.Time) error   { return nil }
+func (nc *nopConn) CloseWithMessage([]byte, time.Time) error    { return nil }
 func (nc *nopConn) SetReadLimit(limit int64)                    {}
 func (nc *nopConn) CloseWithoutFlush() error                    { return nil }
 func (nc *nopConn) SetPingHandler(h func(appData string) error) {}

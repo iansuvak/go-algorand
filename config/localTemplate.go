@@ -63,6 +63,9 @@ type Local struct {
 	// to deduplicate redundant connections
 	PublicAddress string `version[0]:""`
 
+	// EnableP2P enables using libp2p
+	EnableP2P bool `version[28]:"false"`
+
 	MaxConnectionsPerIP int `version[3]:"30" version[27]:"15"`
 
 	// 0 == disable

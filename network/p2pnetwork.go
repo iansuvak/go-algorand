@@ -1,0 +1,341 @@
+// Copyright (C) 2019-2023 Algorand, Inc.
+// This file is part of go-algorand
+//
+// go-algorand is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// go-algorand is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with go-algorand.  If not, see <https://www.gnu.org/licenses/>.
+
+package network
+
+import (
+	"context"
+	"encoding/binary"
+	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/algorand/go-algorand/config"
+	"github.com/algorand/go-algorand/logging"
+	"github.com/algorand/go-algorand/network/p2p"
+	"github.com/algorand/go-algorand/protocol"
+	"github.com/algorand/websocket"
+
+	"github.com/labstack/gommon/log"
+	pubsub "github.com/libp2p/go-libp2p-pubsub"
+	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/libp2p/go-libp2p/core/peer"
+)
+
+// P2PNetwork implements the GossipNode interface
+type P2PNetwork struct {
+	service   *p2p.Service
+	log       logging.Logger
+	config    config.Local
+	genesisID string
+	networkID protocol.NetworkID
+
+	wg sync.WaitGroup
+
+	// which tags to use with libp2p's GossipSub, mapped to topic names
+	topicTags map[protocol.Tag]string
+
+	handlers Multiplexer
+
+	// legacy websockets message support
+	wsReadBuffer chan IncomingMessage
+	peers        map[peer.ID]*wsPeer
+	peersLock    sync.RWMutex
+}
+
+// NewP2PNetwork returns an instance of GossipNode that uses the p2p.Service
+func NewP2PNetwork(log logging.Logger, cfg config.Local, phonebookAddresses []string, genesisID string, networkID protocol.NetworkID) (*P2PNetwork, error) {
+	const readBufferLen = 2048
+
+	net := &P2PNetwork{
+		log:          log,
+		config:       cfg,
+		genesisID:    genesisID,
+		networkID:    networkID,
+		topicTags:    map[protocol.Tag]string{"TX": p2p.TXTopicName},
+		wsReadBuffer: make(chan IncomingMessage, readBufferLen),
+		peers:        make(map[peer.ID]*wsPeer),
+	}
+	var err error
+	net.service, err = p2p.MakeService(log, cfg, phonebookAddresses, net.streamHandler)
+	if err != nil {
+		return nil, err
+	}
+	net.handlers.log = log
+
+	return net, nil
+}
+
+// Start threads, listen on sockets.
+func (n *P2PNetwork) Start() {
+
+	n.wg.Add(1)
+	go n.txTopicHandleLoop(context.TODO())
+}
+
+// Close sockets. Stop threads.
+func (n *P2PNetwork) Stop() {
+	n.service.Close()
+	n.wg.Wait()
+}
+
+var outgoingMessagesBufferSize = int(
+	max(config.Consensus[protocol.ConsensusCurrentVersion].NumProposers,
+		config.Consensus[protocol.ConsensusCurrentVersion].SoftCommitteeSize,
+		config.Consensus[protocol.ConsensusCurrentVersion].CertCommitteeSize,
+		config.Consensus[protocol.ConsensusCurrentVersion].NextCommitteeSize) +
+		max(config.Consensus[protocol.ConsensusCurrentVersion].LateCommitteeSize,
+			config.Consensus[protocol.ConsensusCurrentVersion].RedoCommitteeSize,
+			config.Consensus[protocol.ConsensusCurrentVersion].DownCommitteeSize),
+)
+
+// streamHandler is a callback that the p2p package calls when a new peer connects and establishes a stream
+// on a given protocol.
+func (n *P2PNetwork) streamHandler(ctx context.Context, peer peer.ID, stream network.Stream) {
+	if stream.Protocol() != p2p.AlgorandWsProtocol {
+		// right now it only supports the legacy websocket protocol
+		n.log.Warnf("unknown protocol %s", stream.Protocol())
+		return
+	}
+
+	// get address for peer ID
+	addr := stream.Conn().RemoteMultiaddr().String()
+	if addr == "" {
+		log.Errorf("Could not get address for peer %s", peer)
+	}
+	wsp := &wsPeer{
+		wsPeerCore: makeP2PPeerCore(context.TODO(), n, addr, n.GetRoundTripper(), addr),
+		conn:       &wsPeerConnP2PImpl{stream: stream},
+	}
+	wsp.init(n.config, outgoingMessagesBufferSize)
+	n.peersLock.Lock()
+	n.peers[peer] = wsp
+	n.peersLock.Unlock()
+}
+
+func (n *P2PNetwork) wsPeerRemoteClose(peer *wsPeer, reason disconnectReason) {}
+
+type wsPeerConnP2PImpl struct {
+	stream network.Stream
+}
+
+func (c *wsPeerConnP2PImpl) RemoteAddrString() string {
+	return c.stream.Conn().RemoteMultiaddr().String()
+}
+
+func (c *wsPeerConnP2PImpl) NextReader() (int, io.Reader, error) {
+	// XXX maybe we should use our websockets library?
+	var lenbuf [4]byte
+	_, err := io.ReadFull(c.stream, lenbuf[:])
+	if err != nil {
+		return 0, nil, err
+	}
+	msglen := binary.BigEndian.Uint32(lenbuf[:])
+	if msglen > MaxMessageLength {
+		return 0, nil, fmt.Errorf("message too long: %d", msglen)
+	}
+	// return io.Reader that only reads the next msglen bytes
+	return websocket.BinaryMessage, io.LimitReader(c.stream, int64(msglen)), nil
+}
+
+func (c *wsPeerConnP2PImpl) WriteMessage(_ int, buf []byte) error {
+	// XXX maybe we should use our websockets library?
+	// write encoding of the length
+	var lenbuf [4]byte
+	binary.BigEndian.PutUint32(lenbuf[:], uint32(len(buf)))
+	c.stream.Write(lenbuf[:])
+
+	// write message
+	_, err := c.stream.Write(buf)
+	return err
+}
+
+func (c *wsPeerConnP2PImpl) CloseWithMessage([]byte, time.Time) error {
+	return c.stream.Close()
+}
+
+func (c *wsPeerConnP2PImpl) SetReadLimit(int64) {
+}
+
+func (c *wsPeerConnP2PImpl) CloseWithoutFlush() error {
+	return c.stream.Close()
+}
+
+func (c *wsPeerConnP2PImpl) UnderlyingConn() net.Conn { return nil }
+
+func (n *P2PNetwork) txTopicHandleLoop(ctx context.Context) {
+	defer n.wg.Done()
+	sub, err := n.service.Subscribe(p2p.TXTopicName, n.txTopicValidator)
+	if err != nil {
+		n.log.Errorf("Failed to subscribe to topic %s: %v", p2p.TXTopicName, err)
+		return
+	}
+
+	for {
+		// XXX check ctx? or wait for pubsub to return error on sub.Next()?
+
+		msg, err := sub.Next(ctx)
+		if err != nil {
+			if err != pubsub.ErrSubscriptionCancelled {
+				log.Errorf("Error reading from subscription: %v", err)
+			}
+			sub.Cancel()
+			return
+		}
+
+		// handle TX message
+		// from gossipsub's point of view, it's just waiting to hear back from the validator,
+		// and txHandler does all its work in the validator, so we don't need to do anything here
+		_ = msg
+	}
+}
+
+// txTopicValidator calls txHandler to validate the TX message
+func (n *P2PNetwork) txTopicValidator(ctx context.Context, peerID peer.ID, msg *pubsub.Message) pubsub.ValidationResult {
+	inmsg := IncomingMessage{
+		Sender:   msg.ReceivedFrom,
+		Tag:      protocol.TxnTag,
+		Data:     msg.Data,
+		Net:      n,
+		Received: time.Now().UnixNano(),
+	}
+	outmsg := n.handlers.Handle(inmsg)
+	if !outmsg.ValidationQueued {
+		switch outmsg.Action {
+		case Ignore:
+			return pubsub.ValidationIgnore
+		case Disconnect:
+			return pubsub.ValidationReject
+		case Broadcast:
+			return pubsub.ValidationAccept
+		}
+	}
+	// txHandler queued txn for signature & pool validation
+	// XXX incorporate feedback for txHandler to tell us when a queued message is approved or rejected
+	return pubsub.ValidationAccept
+}
+
+// GetGenesisID implements GossipNode
+func (n *P2PNetwork) GetGenesisID() string {
+	return n.genesisID
+}
+
+// Address returns a string and whether that is a 'final' address or guessed.
+func (n *P2PNetwork) Address() (string, bool) {
+	addrs := n.service.Host().Addrs()
+	if len(addrs) == 0 {
+		return "", false
+	}
+	if len(addrs) > 1 {
+		n.log.Infof("Multiple addresses found, using first one from %v", addrs)
+	}
+	return addrs[0].String(), true
+}
+
+// Broadcast sends a message.
+// If except is not nil then we will not send it to that neighboring Peer.
+// if wait is true then the call blocks until the packet has actually been sent to all neighbors.
+func (n *P2PNetwork) Broadcast(ctx context.Context, tag protocol.Tag, data []byte, wait bool, except Peer) error {
+	if _, ok := n.topicTags[tag]; ok {
+		return n.service.Publish(context.TODO(), p2p.TXTopicName, data)
+	}
+
+	// use legacy network
+	return n.legacyBroadcast(ctx, tag, data, wait, except)
+}
+
+func (n *P2PNetwork) legacyBroadcast(ctx context.Context, tag protocol.Tag, data []byte, wait bool, except Peer) error {
+	return nil
+}
+
+// Relay message
+func (n *P2PNetwork) Relay(ctx context.Context, tag protocol.Tag, data []byte, wait bool, except Peer) error {
+	// handle TX messages with no-op: we assume GossipSub is already working to distribute valid TX messages
+	if tag == protocol.TxnTag {
+		return nil
+	}
+
+	// use legacy network
+	return n.legacyBroadcast(ctx, tag, data, wait, except)
+}
+
+// Disconnect from a peer, probably due to protocol errors.
+func (n *P2PNetwork) Disconnect(badnode Peer) {
+	switch node := badnode.(type) {
+	case peer.ID:
+		err := n.service.Host().Network().ClosePeer(node)
+		if err != nil {
+			n.log.Warnf("Error disconnecting from peer %s: %v", node, err)
+		}
+	default:
+		n.log.Warnf("Unknown peer type %T", badnode)
+	}
+}
+
+// RegisterHTTPHandler path accepts gorilla/mux path annotations
+func (n *P2PNetwork) RegisterHTTPHandler(path string, handler http.Handler) {}
+
+// RequestConnectOutgoing asks the system to actually connect to peers.
+// `replace` optionally drops existing connections before making new ones.
+// `quit` chan allows cancellation. TODO: use `context`
+func (n *P2PNetwork) RequestConnectOutgoing(replace bool, quit <-chan struct{}) {
+	// XXX catchup calls this
+}
+
+// Get a list of Peers we could potentially send a direct message to.
+func (n *P2PNetwork) GetPeers(options ...PeerOption) []Peer { return nil }
+
+// RegisterHandlers adds to the set of given message handlers.
+func (n *P2PNetwork) RegisterHandlers(dispatch []TaggedMessageHandler) {
+	n.handlers.RegisterHandlers(dispatch)
+}
+
+// ClearHandlers deregisters all the existing message handlers.
+func (n *P2PNetwork) ClearHandlers() {
+	// XXX WebsocketNetwork actually just clears 3 handlers when this is called
+	//n.handlers.ClearHandlers([]Tag{protocol.PingTag, protocol.PingReplyTag, protocol.NetPrioResponseTag})
+}
+
+// GetRoundTripper returns a Transport that would limit the number of outgoing connections.
+func (n *P2PNetwork) GetRoundTripper() http.RoundTripper {
+	return http.DefaultTransport
+}
+
+// OnNetworkAdvance notifies the network library that the agreement protocol was able to make a notable progress.
+// this is the only indication that we have that we haven't formed a clique, where all incoming messages
+// arrive very quickly, but might be missing some votes. The usage of this call is expected to have similar
+// characteristics as with a watchdog timer.
+func (n *P2PNetwork) OnNetworkAdvance() {}
+
+// GetHTTPRequestConnection returns the underlying connection for the given request. Note that the request must be the same
+// request that was provided to the http handler ( or provide a fallback Context() to that )
+func (n *P2PNetwork) GetHTTPRequestConnection(request *http.Request) (conn net.Conn) { return nil }
+
+// RegisterMessageInterest notifies the network library that this node
+// wants to receive messages with the specified tag.  This will cause
+// this node to send corresponding MsgOfInterest notifications to any
+// newly connecting peers.  This should be called before the network
+// is started.
+func (n *P2PNetwork) RegisterMessageInterest(protocol.Tag) {}
+
+// SubstituteGenesisID substitutes the "{genesisID}" with their network-specific genesisID.
+func (n *P2PNetwork) SubstituteGenesisID(rawURL string) string {
+	return strings.Replace(rawURL, "{genesisID}", n.genesisID, -1)
+}
