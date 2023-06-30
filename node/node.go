@@ -185,12 +185,23 @@ func MakeFull(log logging.Logger, rootDir string, cfg config.Local, phonebookAdd
 	node.config = cfg
 
 	// tie network, block fetcher, and agreement services together
-	p2pNode, err := network.NewWebsocketNetwork(node.log, node.config, phonebookAddresses, genesis.ID(), genesis.Network, node)
-	if err != nil {
-		log.Errorf("could not create websocket node: %v", err)
-		return nil, err
+	var p2pNode network.GossipNode
+	if cfg.EnableP2P {
+		var err error
+		p2pNode, err = network.NewP2PNetwork(node.log, node.config, phonebookAddresses, genesis.ID(), genesis.Network)
+		if err != nil {
+			log.Errorf("could not create p2p node: %v", err)
+			return nil, err
+		}
+	} else {
+		wsNode, err := network.NewWebsocketNetwork(node.log, node.config, phonebookAddresses, genesis.ID(), genesis.Network, node)
+		if err != nil {
+			log.Errorf("could not create websocket node: %v", err)
+			return nil, err
+		}
+		wsNode.SetPrioScheme(node)
+		p2pNode = wsNode
 	}
-	p2pNode.SetPrioScheme(node)
 	node.net = p2pNode
 
 	// load stored data
@@ -198,7 +209,7 @@ func MakeFull(log logging.Logger, rootDir string, cfg config.Local, phonebookAdd
 	ledgerPathnamePrefix := filepath.Join(genesisDir, config.LedgerFilenamePrefix)
 
 	// create initial ledger, if it doesn't exist
-	err = os.Mkdir(genesisDir, 0700)
+	err := os.Mkdir(genesisDir, 0700)
 	if err != nil && !os.IsExist(err) {
 		log.Errorf("Unable to create genesis directory: %v", err)
 		return nil, err

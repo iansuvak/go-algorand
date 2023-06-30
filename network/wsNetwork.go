@@ -173,12 +173,12 @@ const (
 type GossipNode interface {
 	Address() (string, bool)
 	Broadcast(ctx context.Context, tag protocol.Tag, data []byte, wait bool, except Peer) error
-	BroadcastArray(ctx context.Context, tag []protocol.Tag, data [][]byte, wait bool, except Peer) error
+	//BroadcastArray(ctx context.Context, tag []protocol.Tag, data [][]byte, wait bool, except Peer) error
 	Relay(ctx context.Context, tag protocol.Tag, data []byte, wait bool, except Peer) error
-	RelayArray(ctx context.Context, tag []protocol.Tag, data [][]byte, wait bool, except Peer) error
+	//RelayArray(ctx context.Context, tag []protocol.Tag, data [][]byte, wait bool, except Peer) error
 	Disconnect(badnode Peer)
-	DisconnectPeers()
-	Ready() chan struct{}
+	//DisconnectPeers() // only used by testing
+	//Ready() chan struct{}
 
 	// RegisterHTTPHandler path accepts gorilla/mux path annotations
 	RegisterHTTPHandler(path string, handler http.Handler)
@@ -227,11 +227,11 @@ type GossipNode interface {
 	SubstituteGenesisID(rawURL string) string
 
 	// GetPeerData returns a value stored by SetPeerData
-	GetPeerData(peer Peer, key string) interface{}
+	//GetPeerData(peer Peer, key string) interface{}
 
 	// SetPeerData attaches a piece of data to a peer.
 	// Other services inside go-algorand may attach data to a peer that gets garbage collected when the peer is closed.
-	SetPeerData(peer Peer, key string, value interface{})
+	//SetPeerData(peer Peer, key string, value interface{})
 }
 
 // IncomingMessage represents a message arriving from some peer in our p2p network
@@ -275,6 +275,8 @@ type OutgoingMessage struct {
 	// OnRelease is a function called when outgoing message, resulting from this incoming message, is released
 	// either by being sent or discarded.
 	OnRelease func()
+
+	ValidationQueued bool // this tells you to wait for a validation decision
 }
 
 // ForwardingPolicy is an enum indicating to whom we should send a message
