@@ -20,7 +20,6 @@ import (
 	"context"
 	"io"
 	"log"
-	"sync"
 
 	"github.com/algorand/go-deadlock"
 	"github.com/libp2p/go-libp2p/core/host"

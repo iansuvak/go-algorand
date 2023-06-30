@@ -21,7 +21,6 @@ import (
 	"crypto/rand"
 	"fmt"
 	"runtime"
-	"sync"
 
 	"github.com/algorand/go-algorand/config"
 	"github.com/algorand/go-algorand/logging"
