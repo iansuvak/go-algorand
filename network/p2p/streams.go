@@ -32,25 +32,30 @@ import (
 // streamManager implements network.Notifiee to create and manage streams for use with non-gossipsub protocols.
 // XXX could also manage HTTP streams for e.g. fast catchup
 type streamManager struct {
-	host host.Host
+	host    host.Host
+	handler StreamHandler
 
 	streams     map[peer.ID]network.Stream
 	streamsLock sync.Mutex
 }
 
 // StreamHandler is called when a new bidirectional stream for a given protocol and peer is opened.
-type StreamHandler func(context.Context, protocol.ID, peer.ID) error
+type StreamHandler func(context.Context, peer.ID, network.Stream)
 
-func makeStreamManager(h host.Host) *streamManager {
+func makeStreamManager(h host.Host, handler StreamHandler) *streamManager {
 	return &streamManager{
 		host:    h,
+		handler: handler,
 		streams: make(map[peer.ID]network.Stream),
 	}
 }
 
+// streamHandler is called by libp2p when a new stream is accepted
 func (n *streamManager) streamHandler(stream network.Stream) {
 	n.streamsLock.Lock()
 	defer n.streamsLock.Unlock()
+
+	// could use stream.ID() for tracking; unique across all conns and peers
 
 	remotePeer := stream.Conn().RemotePeer()
 	if oldStream, ok := n.streams[remotePeer]; ok {
@@ -66,6 +71,7 @@ func (n *streamManager) streamHandler(stream network.Stream) {
 				log.Printf("Failed to check old stream with %s: %v", remotePeer, err)
 			}
 			n.streams[stream.Conn().RemotePeer()] = stream
+			n.handler(context.TODO(), remotePeer, stream)
 			return
 		}
 		// otherwise, the old stream is still open, so we can close the new one
@@ -74,6 +80,7 @@ func (n *streamManager) streamHandler(stream network.Stream) {
 	}
 	// no old stream
 	n.streams[stream.Conn().RemotePeer()] = stream
+	n.handler(context.TODO(), remotePeer, stream)
 }
 
 // Connected is called when a connection is opened
@@ -93,7 +100,7 @@ func (n *streamManager) Connected(net network.Network, conn network.Conn) {
 		return // there's already an active stream with this peer for our protocol
 	}
 
-	stream, err := n.host.NewStream(context.Background(), conn.RemotePeer(), protocol.ID(algorandWsProtocol))
+	stream, err := n.host.NewStream(context.Background(), conn.RemotePeer(), protocol.ID(AlgorandWsProtocol))
 	if err != nil {
 		log.Printf("Failed to open stream to %s: %v", conn.RemotePeer(), err)
 		return

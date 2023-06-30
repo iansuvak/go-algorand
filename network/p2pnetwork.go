@@ -18,7 +18,7 @@ package network
 
 import (
 	"context"
-	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"strings"
@@ -29,18 +29,19 @@ import (
 	"github.com/algorand/go-algorand/logging"
 	"github.com/algorand/go-algorand/network/p2p"
 	"github.com/algorand/go-algorand/protocol"
+	"github.com/algorand/websocket"
 
 	"github.com/labstack/gommon/log"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
-	p2pprotocol "github.com/libp2p/go-libp2p/core/protocol"
 )
 
 // P2PNetwork implements the GossipNode interface
 type P2PNetwork struct {
 	service   *p2p.Service
 	log       logging.Logger
+	config    config.Local
 	genesisID string
 	networkID protocol.NetworkID
 
@@ -50,20 +51,30 @@ type P2PNetwork struct {
 	topicTags map[protocol.Tag]string
 
 	handlers Multiplexer
+
+	// legacy websockets message support
+	wsReadBuffer chan IncomingMessage
+	peers        map[peer.ID]*wsPeer
+	peersLock    sync.RWMutex
 }
 
 // NewP2PNetwork returns an instance of GossipNode that uses the p2p.Service
 func NewP2PNetwork(log logging.Logger, cfg config.Local, phonebookAddresses []string, genesisID string, networkID protocol.NetworkID) (*P2PNetwork, error) {
-	p2pService, err := p2p.MakeService(log, cfg, phonebookAddresses)
+	const readBufferLen = 2048
+
+	net := &P2PNetwork{
+		log:          log,
+		config:       cfg,
+		genesisID:    genesisID,
+		networkID:    networkID,
+		topicTags:    map[protocol.Tag]string{"TX": p2p.TXTopicName},
+		wsReadBuffer: make(chan IncomingMessage, readBufferLen),
+		peers:        make(map[peer.ID]*wsPeer),
+	}
+	var err error
+	net.service, err = p2p.MakeService(log, cfg, phonebookAddresses, net.streamHandler)
 	if err != nil {
 		return nil, err
-	}
-	net := &P2PNetwork{
-		service:   p2pService,
-		log:       log,
-		genesisID: genesisID,
-		networkID: networkID,
-		topicTags: map[protocol.Tag]string{"TX": p2p.TXTopicName},
 	}
 	net.handlers.log = log
 
@@ -83,21 +94,69 @@ func (n *P2PNetwork) Stop() {
 	n.wg.Wait()
 }
 
+var outgoingMessagesBufferSize = int(
+	max(config.Consensus[protocol.ConsensusCurrentVersion].NumProposers,
+		config.Consensus[protocol.ConsensusCurrentVersion].SoftCommitteeSize,
+		config.Consensus[protocol.ConsensusCurrentVersion].CertCommitteeSize,
+		config.Consensus[protocol.ConsensusCurrentVersion].NextCommitteeSize) +
+		max(config.Consensus[protocol.ConsensusCurrentVersion].LateCommitteeSize,
+			config.Consensus[protocol.ConsensusCurrentVersion].RedoCommitteeSize,
+			config.Consensus[protocol.ConsensusCurrentVersion].DownCommitteeSize),
+)
+
 // streamHandler is a callback that the p2p package calls when a new peer connects and establishes a stream
 // on a given protocol.
-func (n *P2PNetwork) streamHandler(ctx context.Context, proto p2pprotocol.ID, peer peer.ID, stream network.Stream) error {
-	if proto != p2p.AlgorandWsProtocol {
+func (n *P2PNetwork) streamHandler(ctx context.Context, peer peer.ID, stream network.Stream) {
+	if stream.Protocol() != p2p.AlgorandWsProtocol {
 		// right now it only supports the legacy websocket protocol
-		return fmt.Errorf("unknown protocol %s", proto)
+		n.log.Warnf("unknown protocol %s", stream.Protocol())
+		return
 	}
 
-	n.wg.Add(1)
-	go func() {
-		defer n.wg.Done()
+	// get address for peer ID
+	addr := stream.Conn().RemoteMultiaddr().String()
+	if addr == "" {
+		log.Errorf("Could not get address for peer %s", peer)
+	}
+	wsp := &wsPeer{
+		wsPeerCore: makeP2PPeerCore(context.TODO(), n, addr, n.GetRoundTripper(), addr),
+		conn:       &wsPeerConnP2PImpl{stream: stream},
+	}
+	wsp.init(n.config, outgoingMessagesBufferSize)
+}
 
-	}()
+func (n *P2PNetwork) wsPeerRemoteClose(peer *wsPeer, reason disconnectReason) {}
+
+type wsPeerConnP2PImpl struct {
+	stream network.Stream
+}
+
+func (c *wsPeerConnP2PImpl) RemoteAddrString() string {
+	return c.stream.Conn().RemoteMultiaddr().String()
+
+}
+func (c *wsPeerConnP2PImpl) NextReader() (int, io.Reader, error) {
+	// XXX maybe we should use our websockets library?
+	return websocket.BinaryMessage, c.stream, nil
+}
+
+func (c *wsPeerConnP2PImpl) WriteMessage(int, []byte) error {
+	// XXX maybe we should use our websockets library?
 	return nil
 }
+
+func (c *wsPeerConnP2PImpl) CloseWithMessage([]byte, time.Time) error {
+	return c.stream.Close()
+}
+
+func (c *wsPeerConnP2PImpl) SetReadLimit(int64) {
+}
+
+func (c *wsPeerConnP2PImpl) CloseWithoutFlush() error {
+	return c.stream.Close()
+}
+
+func (c *wsPeerConnP2PImpl) UnderlyingConn() net.Conn { return nil }
 
 func (n *P2PNetwork) txTopicHandleLoop(ctx context.Context) {
 	defer n.wg.Done()

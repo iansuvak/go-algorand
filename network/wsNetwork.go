@@ -232,6 +232,9 @@ type GossipNode interface {
 	// SetPeerData attaches a piece of data to a peer.
 	// Other services inside go-algorand may attach data to a peer that gets garbage collected when the peer is closed.
 	//SetPeerData(peer Peer, key string, value interface{})
+
+	// called from wsPeer to report that it has closed
+	wsPeerRemoteClose(peer *wsPeer, reason disconnectReason)
 }
 
 // IncomingMessage represents a message arriving from some peer in our p2p network
@@ -1236,7 +1239,7 @@ func (wn *WebsocketNetwork) ServeHTTP(response http.ResponseWriter, request *htt
 
 	peer := &wsPeer{
 		wsPeerCore:        makePeerCore(wn, trackedRequest.otherPublicAddr, wn.GetRoundTripper(), trackedRequest.remoteHost),
-		conn:              conn,
+		conn:              wsPeerWebsocketConnImpl{conn},
 		outgoing:          false,
 		InstanceName:      trackedRequest.otherInstanceName,
 		incomingMsgFilter: wn.incomingMsgFilter,
@@ -1948,7 +1951,7 @@ func (wn *WebsocketNetwork) getPeerConnectionTelemetryDetails(now time.Time, pee
 			connDetail.TCP = *tcpInfo
 		}
 		if peer.outgoing {
-			connDetail.Address = justHost(peer.conn.RemoteAddr().String())
+			connDetail.Address = justHost(peer.conn.RemoteAddrString())
 			connDetail.Endpoint = peer.GetAddress()
 			connDetail.MessageDelay = peer.peerMessageDelay
 			connectionDetails.OutgoingPeers = append(connectionDetails.OutgoingPeers, connDetail)
@@ -2360,7 +2363,7 @@ func (wn *WebsocketNetwork) tryConnect(addr, gossipAddr string) {
 
 	peer := &wsPeer{
 		wsPeerCore:                  makePeerCore(wn, addr, wn.GetRoundTripper(), "" /* origin */),
-		conn:                        conn,
+		conn:                        wsPeerWebsocketConnImpl{conn},
 		outgoing:                    true,
 		incomingMsgFilter:           wn.incomingMsgFilter,
 		createTime:                  time.Now(),
@@ -2477,7 +2480,7 @@ func (wn *WebsocketNetwork) SetPrioScheme(s NetPrioScheme) {
 }
 
 // called from wsPeer to report that it has closed
-func (wn *WebsocketNetwork) peerRemoteClose(peer *wsPeer, reason disconnectReason) {
+func (wn *WebsocketNetwork) wsPeerRemoteClose(peer *wsPeer, reason disconnectReason) {
 	wn.removePeer(peer, reason)
 }
 
@@ -2493,9 +2496,9 @@ func (wn *WebsocketNetwork) removePeer(peer *wsPeer, reason disconnectReason) {
 	peerAddr := peer.OriginAddress()
 	// we might be able to get addr out of conn, or it might be closed
 	if peerAddr == "" && peer.conn != nil {
-		paddr := peer.conn.RemoteAddr()
-		if paddr != nil {
-			peerAddr = justHost(paddr.String())
+		paddr := peer.conn.RemoteAddrString()
+		if paddr != "" {
+			peerAddr = justHost(paddr)
 		}
 	}
 	if peerAddr == "" {
@@ -2552,7 +2555,7 @@ func (wn *WebsocketNetwork) addPeer(peer *wsPeer) {
 	// guard against peers which are closed or closing
 	if atomic.LoadInt32(&peer.didSignalClose) == 1 {
 		networkPeerAlreadyClosed.Inc(nil)
-		wn.log.Debugf("peer closing %s", peer.conn.RemoteAddr().String())
+		wn.log.Debugf("peer closing %s", peer.conn.RemoteAddrString())
 		return
 	}
 	// simple duplicate *pointer* check. should never trigger given the callers to addPeer

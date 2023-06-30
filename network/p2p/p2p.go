@@ -50,7 +50,7 @@ type Service struct {
 const AlgorandWsProtocol = "/algorand-ws/1.0.0"
 
 // MakeService creates a P2P service instance
-func MakeService(log logging.Logger, cfg config.Local, phonebookAddresses []string) (*Service, error) {
+func MakeService(log logging.Logger, cfg config.Local, phonebookAddresses []string, streamHandler StreamHandler) (*Service, error) {
 	// ephemeral key for peer ID
 	privKey, _, err := crypto.GenerateEd25519Key(rand.Reader)
 	if err != nil {
@@ -76,7 +76,7 @@ func MakeService(log logging.Logger, cfg config.Local, phonebookAddresses []stri
 		return nil, err
 	}
 
-	sm := makeStreamManager(h)
+	sm := makeStreamManager(h, streamHandler)
 	h.SetStreamHandler(AlgorandWsProtocol, sm.streamHandler)
 
 	psCtx := context.TODO()
