@@ -117,7 +117,7 @@ func (n *P2PNetwork) Start() {
 	go n.broadcaster.broadcastThread(n.wg.Done, n)
 }
 
-// Close sockets. Stop threads.
+// Stop closes sockets and stop threads.
 func (n *P2PNetwork) Stop() {
 	n.service.Close()
 	n.wg.Wait()
@@ -214,10 +214,13 @@ func (c *wsPeerConnP2PImpl) WriteMessage(_ int, buf []byte) error {
 	// write encoding of the length
 	var lenbuf [4]byte
 	binary.BigEndian.PutUint32(lenbuf[:], uint32(len(buf)))
-	c.stream.Write(lenbuf[:])
+	_, err := c.stream.Write(lenbuf[:])
+	if err != nil {
+		return err
+	}
 
 	// write message
-	_, err := c.stream.Write(buf)
+	_, err = c.stream.Write(buf)
 	return err
 }
 
@@ -352,7 +355,7 @@ func (n *P2PNetwork) RequestConnectOutgoing(replace bool, quit <-chan struct{}) 
 	// XXX catchup calls this
 }
 
-// Get a list of Peers we could potentially send a direct message to.
+// GetPeers returns a list of Peers we could potentially send a direct message to.
 func (n *P2PNetwork) GetPeers(options ...PeerOption) []Peer { return nil }
 
 // RegisterHandlers adds to the set of given message handlers.
