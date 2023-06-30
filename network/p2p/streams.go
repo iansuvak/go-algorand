@@ -20,8 +20,8 @@ import (
 	"context"
 	"io"
 	"log"
-	"sync"
 
+	"github.com/algorand/go-deadlock"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -36,7 +36,7 @@ type streamManager struct {
 	handler StreamHandler
 
 	streams     map[peer.ID]network.Stream
-	streamsLock sync.Mutex
+	streamsLock deadlock.Mutex
 }
 
 // StreamHandler is called when a new bidirectional stream for a given protocol and peer is opened.

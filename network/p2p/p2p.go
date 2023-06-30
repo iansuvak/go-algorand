@@ -21,10 +21,10 @@ import (
 	"crypto/rand"
 	"fmt"
 	"runtime"
-	"sync"
 
 	"github.com/algorand/go-algorand/config"
 	"github.com/algorand/go-algorand/logging"
+	"github.com/algorand/go-deadlock"
 
 	"github.com/libp2p/go-libp2p"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
@@ -44,9 +44,10 @@ type Service struct {
 	pubsubCtx context.Context
 
 	topics   map[string]*pubsub.Topic
-	topicsMu sync.Mutex
+	topicsMu deadlock.Mutex
 }
 
+// AlgorandWsProtocol defines a libp2p protocol name for algorand's websockets messages
 const AlgorandWsProtocol = "/algorand-ws/1.0.0"
 
 // MakeService creates a P2P service instance

@@ -25,18 +25,30 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/algorand/go-algorand/config"
 	"github.com/algorand/go-algorand/logging"
 	"github.com/algorand/go-algorand/network/p2p"
 	"github.com/algorand/go-algorand/protocol"
+	"github.com/algorand/go-deadlock"
 	"github.com/algorand/websocket"
 
 	"github.com/labstack/gommon/log"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
+)
+
+var outgoingMessagesBufferSize = int(
+	max(config.Consensus[protocol.ConsensusCurrentVersion].NumProposers,
+		config.Consensus[protocol.ConsensusCurrentVersion].SoftCommitteeSize,
+		config.Consensus[protocol.ConsensusCurrentVersion].CertCommitteeSize,
+		config.Consensus[protocol.ConsensusCurrentVersion].NextCommitteeSize) +
+		max(config.Consensus[protocol.ConsensusCurrentVersion].LateCommitteeSize,
+			config.Consensus[protocol.ConsensusCurrentVersion].RedoCommitteeSize,
+			config.Consensus[protocol.ConsensusCurrentVersion].DownCommitteeSize),
 )
 
 // P2PNetwork implements the GossipNode interface
@@ -46,6 +58,8 @@ type P2PNetwork struct {
 	config    config.Local
 	genesisID string
 	networkID protocol.NetworkID
+	ctx       context.Context
+	ctxCancel context.CancelFunc
 
 	wg sync.WaitGroup
 
@@ -55,9 +69,11 @@ type P2PNetwork struct {
 	handlers Multiplexer
 
 	// legacy websockets message support
-	wsReadBuffer chan IncomingMessage
-	peers        map[peer.ID]*wsPeer
-	peersLock    sync.RWMutex
+	broadcaster        broadcaster
+	wsReadBuffer       chan IncomingMessage
+	peers              map[peer.ID]*wsPeer
+	peersLock          deadlock.RWMutex
+	peersChangeCounter int32
 }
 
 // NewP2PNetwork returns an instance of GossipNode that uses the p2p.Service
@@ -73,12 +89,21 @@ func NewP2PNetwork(log logging.Logger, cfg config.Local, phonebookAddresses []st
 		wsReadBuffer: make(chan IncomingMessage, readBufferLen),
 		peers:        make(map[peer.ID]*wsPeer),
 	}
+	net.ctx, net.ctxCancel = context.WithCancel(context.Background())
+	net.handlers.log = log
+	net.broadcaster = broadcaster{
+		ctx:                    net.ctx,
+		log:                    log,
+		config:                 cfg,
+		broadcastQueueHighPrio: make(chan broadcastRequest, outgoingMessagesBufferSize),
+		broadcastQueueBulk:     make(chan broadcastRequest, 100),
+	}
+
 	var err error
 	net.service, err = p2p.MakeService(log, cfg, phonebookAddresses, net.streamHandler)
 	if err != nil {
 		return nil, err
 	}
-	net.handlers.log = log
 
 	return net, nil
 }
@@ -88,23 +113,15 @@ func (n *P2PNetwork) Start() {
 
 	n.wg.Add(1)
 	go n.txTopicHandleLoop(context.TODO())
+	n.wg.Add(1)
+	go n.broadcaster.broadcastThread(n.wg.Done, n)
 }
 
-// Close sockets. Stop threads.
+// Stop closes sockets and stop threads.
 func (n *P2PNetwork) Stop() {
 	n.service.Close()
 	n.wg.Wait()
 }
-
-var outgoingMessagesBufferSize = int(
-	max(config.Consensus[protocol.ConsensusCurrentVersion].NumProposers,
-		config.Consensus[protocol.ConsensusCurrentVersion].SoftCommitteeSize,
-		config.Consensus[protocol.ConsensusCurrentVersion].CertCommitteeSize,
-		config.Consensus[protocol.ConsensusCurrentVersion].NextCommitteeSize) +
-		max(config.Consensus[protocol.ConsensusCurrentVersion].LateCommitteeSize,
-			config.Consensus[protocol.ConsensusCurrentVersion].RedoCommitteeSize,
-			config.Consensus[protocol.ConsensusCurrentVersion].DownCommitteeSize),
-)
 
 // streamHandler is a callback that the p2p package calls when a new peer connects and establishes a stream
 // on a given protocol.
@@ -128,9 +145,46 @@ func (n *P2PNetwork) streamHandler(ctx context.Context, peer peer.ID, stream net
 	n.peersLock.Lock()
 	n.peers[peer] = wsp
 	n.peersLock.Unlock()
+	atomic.AddInt32(&n.peersChangeCounter, 1)
 }
 
-func (n *P2PNetwork) wsPeerRemoteClose(peer *wsPeer, reason disconnectReason) {}
+// called from wsPeer to report that it has closed
+func (n *P2PNetwork) wsPeerRemoteClose(peer *wsPeer, reason disconnectReason) {
+	n.peersLock.Lock()
+	remotePeerID := peer.conn.(*wsPeerConnP2PImpl).stream.Conn().RemotePeer()
+	delete(n.peers, remotePeerID)
+	n.peersLock.Unlock()
+	atomic.AddInt32(&n.peersChangeCounter, 1)
+}
+
+func (n *P2PNetwork) peerSnapshot(dest []*wsPeer) ([]*wsPeer, int32) {
+	n.peersLock.RLock()
+	defer n.peersLock.RUnlock()
+	// based on wn.peerSnapshot
+	if cap(dest) >= len(n.peers) {
+		toClear := dest[len(n.peers):cap(dest)]
+		for i := range toClear {
+			if toClear[i] == nil {
+				break
+			}
+			toClear[i] = nil
+		}
+		dest = dest[:len(n.peers)]
+	} else {
+		dest = make([]*wsPeer, len(n.peers))
+	}
+	i := 0
+	for _, p := range n.peers {
+		dest[i] = p
+		i++
+	}
+	return dest, atomic.LoadInt32(&n.peersChangeCounter)
+}
+
+func (n *P2PNetwork) checkSlowWritingPeers() {}
+func (n *P2PNetwork) getPeersChangeCounter() *int32 {
+	return &n.peersChangeCounter
+}
 
 type wsPeerConnP2PImpl struct {
 	stream network.Stream
@@ -160,10 +214,13 @@ func (c *wsPeerConnP2PImpl) WriteMessage(_ int, buf []byte) error {
 	// write encoding of the length
 	var lenbuf [4]byte
 	binary.BigEndian.PutUint32(lenbuf[:], uint32(len(buf)))
-	c.stream.Write(lenbuf[:])
+	_, err := c.stream.Write(lenbuf[:])
+	if err != nil {
+		return err
+	}
 
 	// write message
-	_, err := c.stream.Write(buf)
+	_, err = c.stream.Write(buf)
 	return err
 }
 
@@ -258,11 +315,7 @@ func (n *P2PNetwork) Broadcast(ctx context.Context, tag protocol.Tag, data []byt
 	}
 
 	// use legacy network
-	return n.legacyBroadcast(ctx, tag, data, wait, except)
-}
-
-func (n *P2PNetwork) legacyBroadcast(ctx context.Context, tag protocol.Tag, data []byte, wait bool, except Peer) error {
-	return nil
+	return n.broadcaster.BroadcastArray(ctx, []protocol.Tag{tag}, [][]byte{data}, wait, except)
 }
 
 // Relay message
@@ -273,7 +326,7 @@ func (n *P2PNetwork) Relay(ctx context.Context, tag protocol.Tag, data []byte, w
 	}
 
 	// use legacy network
-	return n.legacyBroadcast(ctx, tag, data, wait, except)
+	return n.broadcaster.BroadcastArray(ctx, []protocol.Tag{tag}, [][]byte{data}, wait, except)
 }
 
 // Disconnect from a peer, probably due to protocol errors.
@@ -289,6 +342,9 @@ func (n *P2PNetwork) Disconnect(badnode Peer) {
 	}
 }
 
+// DisconnectPeers is used by testing
+func (n *P2PNetwork) DisconnectPeers() {}
+
 // RegisterHTTPHandler path accepts gorilla/mux path annotations
 func (n *P2PNetwork) RegisterHTTPHandler(path string, handler http.Handler) {}
 
@@ -299,7 +355,7 @@ func (n *P2PNetwork) RequestConnectOutgoing(replace bool, quit <-chan struct{}) 
 	// XXX catchup calls this
 }
 
-// Get a list of Peers we could potentially send a direct message to.
+// GetPeers returns a list of Peers we could potentially send a direct message to.
 func (n *P2PNetwork) GetPeers(options ...PeerOption) []Peer { return nil }
 
 // RegisterHandlers adds to the set of given message handlers.

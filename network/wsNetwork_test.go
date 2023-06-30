@@ -543,7 +543,7 @@ func TestWebsocketNetworkArray(t *testing.T) {
 
 	tags := []protocol.Tag{protocol.TxnTag, protocol.TxnTag, protocol.TxnTag}
 	data := [][]byte{[]byte("foo"), []byte("bar"), []byte("algo")}
-	netA.BroadcastArray(context.Background(), tags, data, false, nil)
+	netA.broadcaster.BroadcastArray(context.Background(), tags, data, false, nil)
 
 	select {
 	case <-counterDone:
@@ -571,7 +571,7 @@ func TestWebsocketNetworkCancel(t *testing.T) {
 	cancel()
 
 	// try calling BroadcastArray
-	netA.BroadcastArray(ctx, tags, data, true, nil)
+	netA.broadcaster.BroadcastArray(ctx, tags, data, true, nil)
 
 	select {
 	case <-counterDone:
@@ -583,7 +583,7 @@ func TestWebsocketNetworkCancel(t *testing.T) {
 	// try calling innerBroadcast
 	request := broadcastRequest{tags: tags, data: data, enqueueTime: time.Now(), ctx: ctx}
 	peers, _ := netA.peerSnapshot([]*wsPeer{})
-	netA.innerBroadcast(request, true, peers)
+	netA.broadcaster.innerBroadcast(request, true, peers)
 
 	select {
 	case <-counterDone:
@@ -2178,7 +2178,7 @@ func BenchmarkWebsocketNetworkBasic(t *testing.B) {
 			networkBroadcastsDropped.WriteMetric(&buf, "")
 			t.Errorf(
 				"a out queue=%d, metric: %s",
-				len(netA.broadcastQueueBulk),
+				len(netA.broadcaster.broadcastQueueBulk),
 				buf.String(),
 			)
 			return
@@ -2452,9 +2452,9 @@ func (wn *WebsocketNetwork) broadcastWithTimestamp(tag protocol.Tag, data []byte
 	tagArr[0] = tag
 	request := broadcastRequest{tags: tagArr, data: msgArr, enqueueTime: when, ctx: context.Background()}
 
-	broadcastQueue := wn.broadcastQueueBulk
+	broadcastQueue := wn.broadcaster.broadcastQueueBulk
 	if highPriorityTag(tagArr) {
-		broadcastQueue = wn.broadcastQueueHighPrio
+		broadcastQueue = wn.broadcaster.broadcastQueueHighPrio
 	}
 	// no wait
 	select {
@@ -2510,13 +2510,13 @@ func TestSlowPeerDisconnection(t *testing.T) {
 	log := logging.TestingLog(t)
 	log.SetLevel(logging.Info)
 	wn := &WebsocketNetwork{
-		log:                            log,
-		config:                         defaultConfig,
-		phonebook:                      MakePhonebook(1, 1*time.Millisecond),
-		GenesisID:                      genesisID,
-		NetworkID:                      config.Devtestnet,
-		slowWritingPeerMonitorInterval: time.Millisecond * 50,
+		log:       log,
+		config:    defaultConfig,
+		phonebook: MakePhonebook(1, 1*time.Millisecond),
+		GenesisID: genesisID,
+		NetworkID: config.Devtestnet,
 	}
+	wn.broadcaster.slowWritingPeerMonitorInterval = time.Millisecond * 50
 	wn.setup()
 	wn.eventualReadyDelay = time.Second
 	wn.messagesOfInterest = nil // clear this before starting the network so that we won't be sending a MOI upon connection.
@@ -3707,7 +3707,7 @@ func TestPreparePeerData(t *testing.T) {
 
 	peers := []*wsPeer{}
 	wn := WebsocketNetwork{}
-	data, comp, digests, seenPrioPPTag := wn.preparePeerData(req, false, peers)
+	data, comp, digests, seenPrioPPTag := wn.broadcaster.preparePeerData(req, false, peers)
 	require.NotEmpty(t, data)
 	require.Empty(t, comp)
 	require.NotEmpty(t, digests)
@@ -3727,7 +3727,7 @@ func TestPreparePeerData(t *testing.T) {
 		features: pfCompressedProposal,
 	}
 	peers = []*wsPeer{&peer1, &peer2}
-	data, comp, digests, seenPrioPPTag = wn.preparePeerData(req, true, peers)
+	data, comp, digests, seenPrioPPTag = wn.broadcaster.preparePeerData(req, true, peers)
 	require.NotEmpty(t, data)
 	require.NotEmpty(t, comp)
 	require.NotEmpty(t, digests)
