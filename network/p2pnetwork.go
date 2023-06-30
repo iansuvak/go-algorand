@@ -339,6 +339,9 @@ func (n *P2PNetwork) Disconnect(badnode Peer) {
 	}
 }
 
+// DisconnectPeers is used by testing
+func (n *P2PNetwork) DisconnectPeers() {}
+
 // RegisterHTTPHandler path accepts gorilla/mux path annotations
 func (n *P2PNetwork) RegisterHTTPHandler(path string, handler http.Handler) {}
 

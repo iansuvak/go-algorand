@@ -177,7 +177,7 @@ type GossipNode interface {
 	Relay(ctx context.Context, tag protocol.Tag, data []byte, wait bool, except Peer) error
 	//RelayArray(ctx context.Context, tag []protocol.Tag, data [][]byte, wait bool, except Peer) error
 	Disconnect(badnode Peer)
-	//DisconnectPeers() // only used by testing
+	DisconnectPeers() // only used by testing
 	//Ready() chan struct{}
 
 	// RegisterHTTPHandler path accepts gorilla/mux path annotations
