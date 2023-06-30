@@ -543,7 +543,7 @@ func TestWebsocketNetworkArray(t *testing.T) {
 
 	tags := []protocol.Tag{protocol.TxnTag, protocol.TxnTag, protocol.TxnTag}
 	data := [][]byte{[]byte("foo"), []byte("bar"), []byte("algo")}
-	netA.BroadcastArray(context.Background(), tags, data, false, nil)
+	netA.broadcaster.BroadcastArray(context.Background(), tags, data, false, nil)
 
 	select {
 	case <-counterDone:
@@ -571,7 +571,7 @@ func TestWebsocketNetworkCancel(t *testing.T) {
 	cancel()
 
 	// try calling BroadcastArray
-	netA.BroadcastArray(ctx, tags, data, true, nil)
+	netA.broadcaster.BroadcastArray(ctx, tags, data, true, nil)
 
 	select {
 	case <-counterDone:

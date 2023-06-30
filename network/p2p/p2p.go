@@ -47,6 +47,7 @@ type Service struct {
 	topicsMu deadlock.Mutex
 }
 
+// AlgorandWsProtocol defines a libp2p protocol name for algorand's websockets messages
 const AlgorandWsProtocol = "/algorand-ws/1.0.0"
 
 // MakeService creates a P2P service instance

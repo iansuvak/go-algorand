@@ -47,6 +47,7 @@ const (
 	opportunisticGraftScoreThreshold = 3.5
 )
 
+// TXTopicName defines a pubsub topic for TX messages
 const TXTopicName = "/algo/tx" // XXX support more topics
 
 func makePubSub(ctx context.Context, cfg config.Local, host host.Host) (*pubsub.PubSub, error) {
