@@ -53,13 +53,15 @@ var outgoingMessagesBufferSize = int(
 
 // P2PNetwork implements the GossipNode interface
 type P2PNetwork struct {
-	service   *p2p.Service
-	log       logging.Logger
-	config    config.Local
-	genesisID string
-	networkID protocol.NetworkID
-	ctx       context.Context
-	ctxCancel context.CancelFunc
+	service     *p2p.Service
+	log         logging.Logger
+	config      config.Local
+	genesisID   string
+	networkID   protocol.NetworkID
+	ctx         context.Context
+	ctxCancel   context.CancelFunc
+	peerStats   map[peer.ID]*p2pPeerStats
+	peerStatsMu deadlock.Mutex
 
 	wg sync.WaitGroup
 
@@ -76,6 +78,10 @@ type P2PNetwork struct {
 	peersChangeCounter int32
 }
 
+type p2pPeerStats struct {
+	txReceived uint64
+}
+
 // NewP2PNetwork returns an instance of GossipNode that uses the p2p.Service
 func NewP2PNetwork(log logging.Logger, cfg config.Local, phonebookAddresses []string, genesisID string, networkID protocol.NetworkID) (*P2PNetwork, error) {
 	const readBufferLen = 2048
@@ -88,6 +94,7 @@ func NewP2PNetwork(log logging.Logger, cfg config.Local, phonebookAddresses []st
 		topicTags:    map[protocol.Tag]string{"TX": p2p.TXTopicName},
 		wsReadBuffer: make(chan IncomingMessage, readBufferLen),
 		peers:        make(map[peer.ID]*wsPeer),
+		peerStats:    make(map[peer.ID]*p2pPeerStats),
 	}
 	net.ctx, net.ctxCancel = context.WithCancel(context.Background())
 	net.handlers.log = log
@@ -105,20 +112,35 @@ func NewP2PNetwork(log logging.Logger, cfg config.Local, phonebookAddresses []st
 		return nil, err
 	}
 
+	err = net.setup()
+
+	if err != nil {
+		return nil, err
+	}
+
 	return net, nil
+}
+
+func (n *P2PNetwork) setup() error {
+	if n.broadcaster.slowWritingPeerMonitorInterval == 0 {
+		n.broadcaster.slowWritingPeerMonitorInterval = slowWritingPeerMonitorInterval
+	}
+	n.handlers.log = n.log
+	return nil
 }
 
 // Start threads, listen on sockets.
 func (n *P2PNetwork) Start() {
-
 	n.wg.Add(1)
-	go n.txTopicHandleLoop(context.TODO())
+	go n.txTopicHandleLoop(n.ctx)
 	n.wg.Add(1)
 	go n.broadcaster.broadcastThread(n.wg.Done, n)
+	n.service.MakeInitialConnections()
 }
 
 // Stop closes sockets and stop threads.
 func (n *P2PNetwork) Stop() {
+	n.ctxCancel()
 	n.service.Close()
 	n.wg.Wait()
 }
@@ -251,11 +273,13 @@ func (n *P2PNetwork) txTopicHandleLoop(ctx context.Context) {
 		msg, err := sub.Next(ctx)
 		if err != nil {
 			if err != pubsub.ErrSubscriptionCancelled {
-				log.Errorf("Error reading from subscription: %v", err)
+				n.log.Errorf("Error reading from subscription: %v, peerId:%s", err, n.service.Host().ID())
 			}
 			sub.Cancel()
 			return
 		}
+
+		n.log.Infof("\nTxHandleLoop:\nReceived message from %s\nCurrent ID: %s\n\n", msg.ReceivedFrom, n.service.Host().ID())
 
 		// handle TX message
 		// from gossipsub's point of view, it's just waiting to hear back from the validator,
@@ -273,6 +297,21 @@ func (n *P2PNetwork) txTopicValidator(ctx context.Context, peerID peer.ID, msg *
 		Net:      n,
 		Received: time.Now().UnixNano(),
 	}
+
+	// if we sent the message, don't validate it
+	if inmsg.Sender == n.service.Host().ID() {
+		return pubsub.ValidationAccept
+	}
+
+	n.peerStatsMu.Lock() // XX probably don't wanna handle this here but adding it now just for testing the basic networking
+	peerStats, ok := n.peerStats[peerID]
+	if !ok {
+		n.peerStats[peerID] = &p2pPeerStats{txReceived: 1}
+	} else {
+		peerStats.txReceived++
+	}
+	n.peerStatsMu.Unlock()
+
 	outmsg := n.handlers.Handle(inmsg)
 	if !outmsg.ValidationQueued {
 		switch outmsg.Action {
@@ -284,6 +323,7 @@ func (n *P2PNetwork) txTopicValidator(ctx context.Context, peerID peer.ID, msg *
 			return pubsub.ValidationAccept
 		}
 	}
+
 	// txHandler queued txn for signature & pool validation
 	// XXX incorporate feedback for txHandler to tell us when a queued message is approved or rejected
 	return pubsub.ValidationAccept

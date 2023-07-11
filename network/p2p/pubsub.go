@@ -23,6 +23,7 @@ import (
 	"github.com/algorand/go-algorand/config"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/libp2p/go-libp2p/core/peer"
 )
 
 func init() {
@@ -48,7 +49,7 @@ const (
 )
 
 // TXTopicName defines a pubsub topic for TX messages
-const TXTopicName = "/algo/tx" // XXX support more topics
+const TXTopicName = "/algo/tx/0.1.0" // XXX support more topics
 
 func makePubSub(ctx context.Context, cfg config.Local, host host.Host) (*pubsub.PubSub, error) {
 	//defaultParams := pubsub.DefaultGossipSubParams()
@@ -58,6 +59,8 @@ func makePubSub(ctx context.Context, cfg config.Local, host host.Host) (*pubsub.
 			// XXX needs tuning
 			DecayInterval: pubsub.DefaultDecayInterval,
 			DecayToZero:   pubsub.DefaultDecayToZero,
+
+			AppSpecificScore: func(p peer.ID) float64 { return 1000 }, // TODO XXX actually implement
 
 			Topics: map[string]*pubsub.TopicScoreParams{
 				TXTopicName: {
@@ -87,6 +90,7 @@ func makePubSub(ctx context.Context, cfg config.Local, host host.Host) (*pubsub.
 		),
 		// pubsub.WithPeerGater(&pubsub.PeerGaterParams{}),
 		pubsub.WithSubscriptionFilter(pubsub.WrapLimitSubscriptionFilter(pubsub.NewAllowlistSubscriptionFilter(TXTopicName), 100)),
+		// pubsub.WithEventTracer(jsonTracer),
 	}
 
 	return pubsub.NewGossipSub(ctx, host, options...)
@@ -123,10 +127,15 @@ func (s *Service) Subscribe(topic string, val pubsub.ValidatorEx) (*pubsub.Subsc
 
 // Publish publishes data to the given topic
 func (s *Service) Publish(ctx context.Context, topic string, data []byte) error {
-	t, err := s.joinTopic(topic)
+	t, err := s.joinTopic(topic) // XXX We probably don't want to join the topic on every publish? but prysm does do it so ¯\_(ツ)_/¯
 	if err != nil {
 		return err
 	}
 	opts := []pubsub.PubOpt{} // XXX
 	return t.Publish(ctx, data, opts...)
+}
+
+// ListPeers returns a list of peers subscribed to the given topic, exported for access from the network package
+func (s *Service) ListPeers(topic string) []peer.ID {
+	return s.pubsub.ListPeers(topic)
 }

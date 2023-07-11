@@ -25,23 +25,27 @@ import (
 	"github.com/algorand/go-algorand/config"
 	"github.com/algorand/go-algorand/logging"
 	"github.com/algorand/go-deadlock"
+	"github.com/multiformats/go-multiaddr"
 
 	"github.com/libp2p/go-libp2p"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
+	peerstore "github.com/libp2p/go-libp2p/core/peer"
+
 	"github.com/libp2p/go-libp2p/p2p/muxer/yamux"
 	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
 )
 
 // Service manages integration with libp2p
 type Service struct {
-	log       logging.Logger
-	host      host.Host
-	privKey   crypto.PrivKey
-	streams   *streamManager
-	pubsub    *pubsub.PubSub
-	pubsubCtx context.Context
+	log              logging.Logger
+	host             host.Host
+	privKey          crypto.PrivKey
+	streams          *streamManager
+	pubsub           *pubsub.PubSub
+	pubsubCtx        context.Context
+	initialPhonebook []multiaddr.Multiaddr
 
 	topics   map[string]*pubsub.Topic
 	topicsMu deadlock.Mutex
@@ -70,7 +74,7 @@ func MakeService(log logging.Logger, cfg config.Local, phonebookAddresses []stri
 		libp2p.Transport(tcp.NewTCPTransport),
 		libp2p.Muxer("/yamux/1.0.0", &ymx),
 		// libp2p.PeerStore(XXX), // default is empty in-memory peerstore
-		// libp2p.ListenAddrs("XXX"), // default is 0.0.0.0
+		libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/0"), // need to include this to be able to get address for self
 		// libp2p.ConnectionGater(XXX),
 	)
 	if err != nil {
@@ -86,14 +90,25 @@ func MakeService(log logging.Logger, cfg config.Local, phonebookAddresses []stri
 		return nil, err
 	}
 
+	multiAdrPhoneBook := make([]multiaddr.Multiaddr, 0)
+
+	for _, addr := range phonebookAddresses {
+		multiAdr, err := multiaddr.NewMultiaddr(addr)
+		if err != nil {
+			return nil, err
+		}
+		multiAdrPhoneBook = append(multiAdrPhoneBook, multiAdr)
+	}
+
 	return &Service{
-		log:       log,
-		privKey:   privKey,
-		host:      h,
-		streams:   sm,
-		pubsub:    ps,
-		pubsubCtx: psCtx,
-		topics:    make(map[string]*pubsub.Topic),
+		log:              log,
+		privKey:          privKey,
+		host:             h,
+		streams:          sm,
+		pubsub:           ps,
+		pubsubCtx:        psCtx,
+		topics:           make(map[string]*pubsub.Topic),
+		initialPhonebook: multiAdrPhoneBook,
 	}, nil
 }
 
@@ -105,4 +120,19 @@ func (s *Service) Close() error {
 // Host returns the libp2p host
 func (s *Service) Host() host.Host {
 	return s.host
+}
+
+// MakeInitialConnections attempts to establish connections to the provided phonebook addresses
+func (s *Service) MakeInitialConnections() {
+	for _, addr := range s.initialPhonebook {
+		addrInfo, err := peerstore.AddrInfoFromP2pAddr(addr)
+		if err != nil {
+			s.log.Warnf("Failed to get address info for phonebook address: %s, err: %s", addr, err)
+			continue
+		}
+		err = s.Host().Connect(context.TODO(), *addrInfo)
+		if err != nil {
+			s.log.Warnf("Failed to connect to phonebook address: %s, err: %s", addr, err)
+		}
+	}
 }
