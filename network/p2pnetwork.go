@@ -266,6 +266,10 @@ func (n *P2PNetwork) txTopicHandleLoop(ctx context.Context) {
 
 // txTopicValidator calls txHandler to validate the TX message
 func (n *P2PNetwork) txTopicValidator(ctx context.Context, peerID peer.ID, msg *pubsub.Message) pubsub.ValidationResult {
+	if msg.Local {
+		return pubsub.ValidationAccept // XXX or ignore?
+	}
+
 	inmsg := IncomingMessage{
 		Sender:   msg.ReceivedFrom,
 		Tag:      protocol.TxnTag,
