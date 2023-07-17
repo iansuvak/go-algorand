@@ -43,6 +43,9 @@ const (
 // encoding the resources map below.
 type SortUint64 = basics.SortUint64
 
+// Uint64Less is defined for msgp to use when unmarshalling records
+func Uint64Less(a, b uint64) bool { return a < b }
+
 // BalanceRecordV6 is the encoded account balance record.
 type BalanceRecordV6 struct {
 	_struct struct{} `codec:",omitempty,omitemptyarray"`

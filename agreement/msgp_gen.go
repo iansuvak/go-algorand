@@ -3580,6 +3580,10 @@ func (z *periodRouter) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			} else if (*z).Children == nil {
 				(*z).Children = make(map[step]*stepRouter, zb0005)
 			}
+			var zb0007 step
+			_ = zb0007
+			var zb0008 bool
+			_ = zb0008
 			for zb0005 > 0 {
 				var zb0001 step
 				var zb0002 *stepRouter
@@ -3589,6 +3593,12 @@ func (z *periodRouter) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					err = msgp.WrapError(err, "struct-from-array", "Children")
 					return
 				}
+				if zb0008 && !StepLess(zb0007, zb0001) {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				zb0007 = zb0001
+				zb0008 = true
 				if msgp.IsNil(bts) {
 					bts, err = msgp.ReadNilBytes(bts)
 					if err != nil {
@@ -3650,27 +3660,37 @@ func (z *periodRouter) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			case "Children":
-				var zb0007 int
-				var zb0008 bool
-				zb0007, zb0008, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0009 int
+				var zb0010 bool
+				zb0009, zb0010, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Children")
 					return
 				}
-				if zb0008 {
+				if zb0010 {
 					(*z).Children = nil
 				} else if (*z).Children == nil {
-					(*z).Children = make(map[step]*stepRouter, zb0007)
+					(*z).Children = make(map[step]*stepRouter, zb0009)
 				}
-				for zb0007 > 0 {
+				var zb0011 step
+				_ = zb0011
+				var zb0012 bool
+				_ = zb0012
+				for zb0009 > 0 {
 					var zb0001 step
 					var zb0002 *stepRouter
-					zb0007--
+					zb0009--
 					bts, err = zb0001.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Children")
 						return
 					}
+					if zb0012 && !StepLess(zb0011, zb0001) {
+						err = &msgp.ErrNonCanonical{}
+						return
+					}
+					zb0011 = zb0001
+					zb0012 = true
 					if msgp.IsNil(bts) {
 						bts, err = msgp.ReadNilBytes(bts)
 						if err != nil {
@@ -4508,6 +4528,10 @@ func (z *proposal) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			} else if (*z).unauthenticatedProposal.Block.BlockHeader.StateProofTracking == nil {
 				(*z).unauthenticatedProposal.Block.BlockHeader.StateProofTracking = make(map[protocol.StateProofType]bookkeeping.StateProofTrackingData, zb0007)
 			}
+			var zb0009 protocol.StateProofType
+			_ = zb0009
+			var zb0010 bool
+			_ = zb0010
 			for zb0007 > 0 {
 				var zb0001 protocol.StateProofType
 				var zb0002 bookkeeping.StateProofTrackingData
@@ -4517,6 +4541,12 @@ func (z *proposal) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					err = msgp.WrapError(err, "struct-from-array", "StateProofTracking")
 					return
 				}
+				if zb0010 && !protocol.StateProofTypeLess(zb0009, zb0001) {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				zb0009 = zb0001
+				zb0010 = true
 				bts, err = zb0002.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "StateProofTracking", zb0001)
@@ -4527,24 +4557,24 @@ func (z *proposal) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		}
 		if zb0004 > 0 {
 			zb0004--
-			var zb0009 int
-			var zb0010 bool
-			zb0009, zb0010, bts, err = msgp.ReadArrayHeaderBytes(bts)
+			var zb0011 int
+			var zb0012 bool
+			zb0011, zb0012, bts, err = msgp.ReadArrayHeaderBytes(bts)
 			if err != nil {
 				err = msgp.WrapError(err, "struct-from-array", "ExpiredParticipationAccounts")
 				return
 			}
-			if zb0009 > config.MaxProposedExpiredOnlineAccounts {
-				err = msgp.ErrOverflow(uint64(zb0009), uint64(config.MaxProposedExpiredOnlineAccounts))
+			if zb0011 > config.MaxProposedExpiredOnlineAccounts {
+				err = msgp.ErrOverflow(uint64(zb0011), uint64(config.MaxProposedExpiredOnlineAccounts))
 				err = msgp.WrapError(err, "struct-from-array", "ExpiredParticipationAccounts")
 				return
 			}
-			if zb0010 {
+			if zb0012 {
 				(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = nil
-			} else if (*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts != nil && cap((*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts) >= zb0009 {
-				(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = ((*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts)[:zb0009]
+			} else if (*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts != nil && cap((*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts) >= zb0011 {
+				(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = ((*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts)[:zb0011]
 			} else {
-				(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = make([]basics.Address, zb0009)
+				(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = make([]basics.Address, zb0011)
 			}
 			for zb0003 := range (*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts {
 				bts, err = (*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts[zb0003].UnmarshalMsg(bts)
@@ -4573,13 +4603,13 @@ func (z *proposal) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		if zb0004 > 0 {
 			zb0004--
 			{
-				var zb0011 uint64
-				zb0011, bts, err = msgp.ReadUint64Bytes(bts)
+				var zb0013 uint64
+				zb0013, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "OriginalPeriod")
 					return
 				}
-				(*z).unauthenticatedProposal.OriginalPeriod = period(zb0011)
+				(*z).unauthenticatedProposal.OriginalPeriod = period(zb0013)
 			}
 		}
 		if zb0004 > 0 {
@@ -4650,14 +4680,14 @@ func (z *proposal) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			case "gen":
-				var zb0012 int
-				zb0012, err = msgp.ReadBytesBytesHeader(bts)
+				var zb0014 int
+				zb0014, err = msgp.ReadBytesBytesHeader(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "GenesisID")
 					return
 				}
-				if zb0012 > config.MaxGenesisIDLen {
-					err = msgp.ErrOverflow(uint64(zb0012), uint64(config.MaxGenesisIDLen))
+				if zb0014 > config.MaxGenesisIDLen {
+					err = msgp.ErrOverflow(uint64(zb0014), uint64(config.MaxGenesisIDLen))
 					return
 				}
 				(*z).unauthenticatedProposal.Block.BlockHeader.GenesisID, bts, err = msgp.ReadStringBytes(bts)
@@ -4762,32 +4792,42 @@ func (z *proposal) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			case "spt":
-				var zb0013 int
-				var zb0014 bool
-				zb0013, zb0014, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0015 int
+				var zb0016 bool
+				zb0015, zb0016, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "StateProofTracking")
 					return
 				}
-				if zb0013 > protocol.NumStateProofTypes {
-					err = msgp.ErrOverflow(uint64(zb0013), uint64(protocol.NumStateProofTypes))
+				if zb0015 > protocol.NumStateProofTypes {
+					err = msgp.ErrOverflow(uint64(zb0015), uint64(protocol.NumStateProofTypes))
 					err = msgp.WrapError(err, "StateProofTracking")
 					return
 				}
-				if zb0014 {
+				if zb0016 {
 					(*z).unauthenticatedProposal.Block.BlockHeader.StateProofTracking = nil
 				} else if (*z).unauthenticatedProposal.Block.BlockHeader.StateProofTracking == nil {
-					(*z).unauthenticatedProposal.Block.BlockHeader.StateProofTracking = make(map[protocol.StateProofType]bookkeeping.StateProofTrackingData, zb0013)
+					(*z).unauthenticatedProposal.Block.BlockHeader.StateProofTracking = make(map[protocol.StateProofType]bookkeeping.StateProofTrackingData, zb0015)
 				}
-				for zb0013 > 0 {
+				var zb0017 protocol.StateProofType
+				_ = zb0017
+				var zb0018 bool
+				_ = zb0018
+				for zb0015 > 0 {
 					var zb0001 protocol.StateProofType
 					var zb0002 bookkeeping.StateProofTrackingData
-					zb0013--
+					zb0015--
 					bts, err = zb0001.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "StateProofTracking")
 						return
 					}
+					if zb0018 && !protocol.StateProofTypeLess(zb0017, zb0001) {
+						err = &msgp.ErrNonCanonical{}
+						return
+					}
+					zb0017 = zb0001
+					zb0018 = true
 					bts, err = zb0002.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "StateProofTracking", zb0001)
@@ -4796,24 +4836,24 @@ func (z *proposal) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					(*z).unauthenticatedProposal.Block.BlockHeader.StateProofTracking[zb0001] = zb0002
 				}
 			case "partupdrmv":
-				var zb0015 int
-				var zb0016 bool
-				zb0015, zb0016, bts, err = msgp.ReadArrayHeaderBytes(bts)
+				var zb0019 int
+				var zb0020 bool
+				zb0019, zb0020, bts, err = msgp.ReadArrayHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "ExpiredParticipationAccounts")
 					return
 				}
-				if zb0015 > config.MaxProposedExpiredOnlineAccounts {
-					err = msgp.ErrOverflow(uint64(zb0015), uint64(config.MaxProposedExpiredOnlineAccounts))
+				if zb0019 > config.MaxProposedExpiredOnlineAccounts {
+					err = msgp.ErrOverflow(uint64(zb0019), uint64(config.MaxProposedExpiredOnlineAccounts))
 					err = msgp.WrapError(err, "ExpiredParticipationAccounts")
 					return
 				}
-				if zb0016 {
+				if zb0020 {
 					(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = nil
-				} else if (*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts != nil && cap((*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts) >= zb0015 {
-					(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = ((*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts)[:zb0015]
+				} else if (*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts != nil && cap((*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts) >= zb0019 {
+					(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = ((*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts)[:zb0019]
 				} else {
-					(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = make([]basics.Address, zb0015)
+					(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = make([]basics.Address, zb0019)
 				}
 				for zb0003 := range (*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts {
 					bts, err = (*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts[zb0003].UnmarshalMsg(bts)
@@ -4836,13 +4876,13 @@ func (z *proposal) UnmarshalMsg(bts []byte) (o []byte, err error) {
 				}
 			case "oper":
 				{
-					var zb0017 uint64
-					zb0017, bts, err = msgp.ReadUint64Bytes(bts)
+					var zb0021 uint64
+					zb0021, bts, err = msgp.ReadUint64Bytes(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "OriginalPeriod")
 						return
 					}
-					(*z).unauthenticatedProposal.OriginalPeriod = period(zb0017)
+					(*z).unauthenticatedProposal.OriginalPeriod = period(zb0021)
 				}
 			case "oprop":
 				bts, err = (*z).unauthenticatedProposal.OriginalProposer.UnmarshalMsg(bts)
@@ -5205,6 +5245,10 @@ func (z *proposalStore) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			} else if (*z).Relevant == nil {
 				(*z).Relevant = make(map[period]proposalValue, zb0007)
 			}
+			var zb0009 period
+			_ = zb0009
+			var zb0010 bool
+			_ = zb0010
 			for zb0007 > 0 {
 				var zb0001 period
 				var zb0002 proposalValue
@@ -5214,6 +5258,12 @@ func (z *proposalStore) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					err = msgp.WrapError(err, "struct-from-array", "Relevant")
 					return
 				}
+				if zb0010 && !PeriodLess(zb0009, zb0001) {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				zb0009 = zb0001
+				zb0010 = true
 				bts, err = zb0002.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "Relevant", zb0001)
@@ -5232,27 +5282,37 @@ func (z *proposalStore) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		}
 		if zb0005 > 0 {
 			zb0005--
-			var zb0009 int
-			var zb0010 bool
-			zb0009, zb0010, bts, err = msgp.ReadMapHeaderBytes(bts)
+			var zb0011 int
+			var zb0012 bool
+			zb0011, zb0012, bts, err = msgp.ReadMapHeaderBytes(bts)
 			if err != nil {
 				err = msgp.WrapError(err, "struct-from-array", "Assemblers")
 				return
 			}
-			if zb0010 {
+			if zb0012 {
 				(*z).Assemblers = nil
 			} else if (*z).Assemblers == nil {
-				(*z).Assemblers = make(map[proposalValue]blockAssembler, zb0009)
+				(*z).Assemblers = make(map[proposalValue]blockAssembler, zb0011)
 			}
-			for zb0009 > 0 {
+			var zb0013 proposalValue
+			_ = zb0013
+			var zb0014 bool
+			_ = zb0014
+			for zb0011 > 0 {
 				var zb0003 proposalValue
 				var zb0004 blockAssembler
-				zb0009--
+				zb0011--
 				bts, err = zb0003.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "Assemblers")
 					return
 				}
+				if zb0014 && !ProposalValueLess(zb0013, zb0003) {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				zb0013 = zb0003
+				zb0014 = true
 				bts, err = zb0004.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "Assemblers", zb0003)
@@ -5285,27 +5345,37 @@ func (z *proposalStore) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "Relevant":
-				var zb0011 int
-				var zb0012 bool
-				zb0011, zb0012, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0015 int
+				var zb0016 bool
+				zb0015, zb0016, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Relevant")
 					return
 				}
-				if zb0012 {
+				if zb0016 {
 					(*z).Relevant = nil
 				} else if (*z).Relevant == nil {
-					(*z).Relevant = make(map[period]proposalValue, zb0011)
+					(*z).Relevant = make(map[period]proposalValue, zb0015)
 				}
-				for zb0011 > 0 {
+				var zb0017 period
+				_ = zb0017
+				var zb0018 bool
+				_ = zb0018
+				for zb0015 > 0 {
 					var zb0001 period
 					var zb0002 proposalValue
-					zb0011--
+					zb0015--
 					bts, err = zb0001.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Relevant")
 						return
 					}
+					if zb0018 && !PeriodLess(zb0017, zb0001) {
+						err = &msgp.ErrNonCanonical{}
+						return
+					}
+					zb0017 = zb0001
+					zb0018 = true
 					bts, err = zb0002.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Relevant", zb0001)
@@ -5320,27 +5390,37 @@ func (z *proposalStore) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			case "Assemblers":
-				var zb0013 int
-				var zb0014 bool
-				zb0013, zb0014, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0019 int
+				var zb0020 bool
+				zb0019, zb0020, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Assemblers")
 					return
 				}
-				if zb0014 {
+				if zb0020 {
 					(*z).Assemblers = nil
 				} else if (*z).Assemblers == nil {
-					(*z).Assemblers = make(map[proposalValue]blockAssembler, zb0013)
+					(*z).Assemblers = make(map[proposalValue]blockAssembler, zb0019)
 				}
-				for zb0013 > 0 {
+				var zb0021 proposalValue
+				_ = zb0021
+				var zb0022 bool
+				_ = zb0022
+				for zb0019 > 0 {
 					var zb0003 proposalValue
 					var zb0004 blockAssembler
-					zb0013--
+					zb0019--
 					bts, err = zb0003.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Assemblers")
 						return
 					}
+					if zb0022 && !ProposalValueLess(zb0021, zb0003) {
+						err = &msgp.ErrNonCanonical{}
+						return
+					}
+					zb0021 = zb0003
+					zb0022 = true
 					bts, err = zb0004.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Assemblers", zb0003)
@@ -5485,6 +5565,10 @@ func (z *proposalTable) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			} else if (*z).Pending == nil {
 				(*z).Pending = make(map[uint64]*messageEvent, zb0005)
 			}
+			var zb0007 uint64
+			_ = zb0007
+			var zb0008 bool
+			_ = zb0008
 			for zb0005 > 0 {
 				var zb0001 uint64
 				var zb0002 *messageEvent
@@ -5494,6 +5578,12 @@ func (z *proposalTable) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					err = msgp.WrapError(err, "struct-from-array", "Pending")
 					return
 				}
+				if zb0008 && !Uint64Less(zb0007, zb0001) {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				zb0007 = zb0001
+				zb0008 = true
 				if msgp.IsNil(bts) {
 					bts, err = msgp.ReadNilBytes(bts)
 					if err != nil {
@@ -5545,27 +5635,37 @@ func (z *proposalTable) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "Pending":
-				var zb0007 int
-				var zb0008 bool
-				zb0007, zb0008, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0009 int
+				var zb0010 bool
+				zb0009, zb0010, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Pending")
 					return
 				}
-				if zb0008 {
+				if zb0010 {
 					(*z).Pending = nil
 				} else if (*z).Pending == nil {
-					(*z).Pending = make(map[uint64]*messageEvent, zb0007)
+					(*z).Pending = make(map[uint64]*messageEvent, zb0009)
 				}
-				for zb0007 > 0 {
+				var zb0011 uint64
+				_ = zb0011
+				var zb0012 bool
+				_ = zb0012
+				for zb0009 > 0 {
 					var zb0001 uint64
 					var zb0002 *messageEvent
-					zb0007--
+					zb0009--
 					zb0001, bts, err = msgp.ReadUint64Bytes(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Pending")
 						return
 					}
+					if zb0012 && !Uint64Less(zb0011, zb0001) {
+						err = &msgp.ErrNonCanonical{}
+						return
+					}
+					zb0011 = zb0001
+					zb0012 = true
 					if msgp.IsNil(bts) {
 						bts, err = msgp.ReadNilBytes(bts)
 						if err != nil {
@@ -5704,6 +5804,10 @@ func (z *proposalTracker) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			} else if (*z).Duplicate == nil {
 				(*z).Duplicate = make(map[basics.Address]bool, zb0005)
 			}
+			var zb0007 basics.Address
+			_ = zb0007
+			var zb0008 bool
+			_ = zb0008
 			for zb0005 > 0 {
 				var zb0001 basics.Address
 				var zb0002 bool
@@ -5713,6 +5817,12 @@ func (z *proposalTracker) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					err = msgp.WrapError(err, "struct-from-array", "Duplicate")
 					return
 				}
+				if zb0008 && !basics.AddressLess(zb0007, zb0001) {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				zb0007 = zb0001
+				zb0008 = true
 				zb0002, bts, err = msgp.ReadBoolBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "Duplicate", zb0001)
@@ -5761,27 +5871,37 @@ func (z *proposalTracker) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "Duplicate":
-				var zb0007 int
-				var zb0008 bool
-				zb0007, zb0008, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0009 int
+				var zb0010 bool
+				zb0009, zb0010, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Duplicate")
 					return
 				}
-				if zb0008 {
+				if zb0010 {
 					(*z).Duplicate = nil
 				} else if (*z).Duplicate == nil {
-					(*z).Duplicate = make(map[basics.Address]bool, zb0007)
+					(*z).Duplicate = make(map[basics.Address]bool, zb0009)
 				}
-				for zb0007 > 0 {
+				var zb0011 basics.Address
+				_ = zb0011
+				var zb0012 bool
+				_ = zb0012
+				for zb0009 > 0 {
 					var zb0001 basics.Address
 					var zb0002 bool
-					zb0007--
+					zb0009--
 					bts, err = zb0001.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Duplicate")
 						return
 					}
+					if zb0012 && !basics.AddressLess(zb0011, zb0001) {
+						err = &msgp.ErrNonCanonical{}
+						return
+					}
+					zb0011 = zb0001
+					zb0012 = true
 					zb0002, bts, err = msgp.ReadBoolBytes(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Duplicate", zb0001)
@@ -6255,6 +6375,10 @@ func (z *proposalVoteCounter) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			} else if (*z).Votes == nil {
 				(*z).Votes = make(map[basics.Address]vote, zb0005)
 			}
+			var zb0007 basics.Address
+			_ = zb0007
+			var zb0008 bool
+			_ = zb0008
 			for zb0005 > 0 {
 				var zb0001 basics.Address
 				var zb0002 vote
@@ -6264,6 +6388,12 @@ func (z *proposalVoteCounter) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					err = msgp.WrapError(err, "struct-from-array", "Votes")
 					return
 				}
+				if zb0008 && !basics.AddressLess(zb0007, zb0001) {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				zb0007 = zb0001
+				zb0008 = true
 				bts, err = zb0002.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "Votes", zb0001)
@@ -6302,27 +6432,37 @@ func (z *proposalVoteCounter) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			case "Votes":
-				var zb0007 int
-				var zb0008 bool
-				zb0007, zb0008, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0009 int
+				var zb0010 bool
+				zb0009, zb0010, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Votes")
 					return
 				}
-				if zb0008 {
+				if zb0010 {
 					(*z).Votes = nil
 				} else if (*z).Votes == nil {
-					(*z).Votes = make(map[basics.Address]vote, zb0007)
+					(*z).Votes = make(map[basics.Address]vote, zb0009)
 				}
-				for zb0007 > 0 {
+				var zb0011 basics.Address
+				_ = zb0011
+				var zb0012 bool
+				_ = zb0012
+				for zb0009 > 0 {
 					var zb0001 basics.Address
 					var zb0002 vote
-					zb0007--
+					zb0009--
 					bts, err = zb0001.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Votes")
 						return
 					}
+					if zb0012 && !basics.AddressLess(zb0011, zb0001) {
+						err = &msgp.ErrNonCanonical{}
+						return
+					}
+					zb0011 = zb0001
+					zb0012 = true
 					bts, err = zb0002.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Votes", zb0001)
@@ -6868,6 +7008,10 @@ func (z *rootRouter) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			} else if (*z).Children == nil {
 				(*z).Children = make(map[round]*roundRouter, zb0009)
 			}
+			var zb0011 basics.Round
+			_ = zb0011
+			var zb0012 bool
+			_ = zb0012
 			for zb0009 > 0 {
 				var zb0001 basics.Round
 				var zb0002 *roundRouter
@@ -6877,6 +7021,12 @@ func (z *rootRouter) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					err = msgp.WrapError(err, "struct-from-array", "Children")
 					return
 				}
+				if zb0012 && !RoundLess(zb0011, zb0001) {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				zb0011 = zb0001
+				zb0012 = true
 				if msgp.IsNil(bts) {
 					bts, err = msgp.ReadNilBytes(bts)
 					if err != nil {
@@ -6920,17 +7070,17 @@ func (z *rootRouter) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "ProposalManager":
-				var zb0011 int
-				var zb0012 bool
-				zb0011, zb0012, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0013 int
+				var zb0014 bool
+				zb0013, zb0014, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if _, ok := err.(msgp.TypeError); ok {
-					zb0011, zb0012, bts, err = msgp.ReadArrayHeaderBytes(bts)
+					zb0013, zb0014, bts, err = msgp.ReadArrayHeaderBytes(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "ProposalManager")
 						return
 					}
-					if zb0011 > 0 {
-						err = msgp.ErrTooManyArrayFields(zb0011)
+					if zb0013 > 0 {
+						err = msgp.ErrTooManyArrayFields(zb0013)
 						if err != nil {
 							err = msgp.WrapError(err, "ProposalManager", "struct-from-array")
 							return
@@ -6941,11 +7091,11 @@ func (z *rootRouter) UnmarshalMsg(bts []byte) (o []byte, err error) {
 						err = msgp.WrapError(err, "ProposalManager")
 						return
 					}
-					if zb0012 {
+					if zb0014 {
 						(*z).ProposalManager = proposalManager{}
 					}
-					for zb0011 > 0 {
-						zb0011--
+					for zb0013 > 0 {
+						zb0013--
 						field, bts, err = msgp.ReadMapKeyZC(bts)
 						if err != nil {
 							err = msgp.WrapError(err, "ProposalManager")
@@ -6962,17 +7112,17 @@ func (z *rootRouter) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					}
 				}
 			case "VoteAggregator":
-				var zb0013 int
-				var zb0014 bool
-				zb0013, zb0014, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0015 int
+				var zb0016 bool
+				zb0015, zb0016, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if _, ok := err.(msgp.TypeError); ok {
-					zb0013, zb0014, bts, err = msgp.ReadArrayHeaderBytes(bts)
+					zb0015, zb0016, bts, err = msgp.ReadArrayHeaderBytes(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "VoteAggregator")
 						return
 					}
-					if zb0013 > 0 {
-						err = msgp.ErrTooManyArrayFields(zb0013)
+					if zb0015 > 0 {
+						err = msgp.ErrTooManyArrayFields(zb0015)
 						if err != nil {
 							err = msgp.WrapError(err, "VoteAggregator", "struct-from-array")
 							return
@@ -6983,11 +7133,11 @@ func (z *rootRouter) UnmarshalMsg(bts []byte) (o []byte, err error) {
 						err = msgp.WrapError(err, "VoteAggregator")
 						return
 					}
-					if zb0014 {
+					if zb0016 {
 						(*z).VoteAggregator = voteAggregator{}
 					}
-					for zb0013 > 0 {
-						zb0013--
+					for zb0015 > 0 {
+						zb0015--
 						field, bts, err = msgp.ReadMapKeyZC(bts)
 						if err != nil {
 							err = msgp.WrapError(err, "VoteAggregator")
@@ -7004,27 +7154,37 @@ func (z *rootRouter) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					}
 				}
 			case "Children":
-				var zb0015 int
-				var zb0016 bool
-				zb0015, zb0016, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0017 int
+				var zb0018 bool
+				zb0017, zb0018, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Children")
 					return
 				}
-				if zb0016 {
+				if zb0018 {
 					(*z).Children = nil
 				} else if (*z).Children == nil {
-					(*z).Children = make(map[round]*roundRouter, zb0015)
+					(*z).Children = make(map[round]*roundRouter, zb0017)
 				}
-				for zb0015 > 0 {
+				var zb0019 basics.Round
+				_ = zb0019
+				var zb0020 bool
+				_ = zb0020
+				for zb0017 > 0 {
 					var zb0001 basics.Round
 					var zb0002 *roundRouter
-					zb0015--
+					zb0017--
 					bts, err = zb0001.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Children")
 						return
 					}
+					if zb0020 && !RoundLess(zb0019, zb0001) {
+						err = &msgp.ErrNonCanonical{}
+						return
+					}
+					zb0019 = zb0001
+					zb0020 = true
 					if msgp.IsNil(bts) {
 						bts, err = msgp.ReadNilBytes(bts)
 						if err != nil {
@@ -7245,6 +7405,10 @@ func (z *roundRouter) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			} else if (*z).Children == nil {
 				(*z).Children = make(map[period]*periodRouter, zb0007)
 			}
+			var zb0009 period
+			_ = zb0009
+			var zb0010 bool
+			_ = zb0010
 			for zb0007 > 0 {
 				var zb0001 period
 				var zb0002 *periodRouter
@@ -7254,6 +7418,12 @@ func (z *roundRouter) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					err = msgp.WrapError(err, "struct-from-array", "Children")
 					return
 				}
+				if zb0010 && !PeriodLess(zb0009, zb0001) {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				zb0009 = zb0001
+				zb0010 = true
 				if msgp.IsNil(bts) {
 					bts, err = msgp.ReadNilBytes(bts)
 					if err != nil {
@@ -7303,33 +7473,33 @@ func (z *roundRouter) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			case "VoteTrackerRound":
-				var zb0009 int
-				var zb0010 bool
-				zb0009, zb0010, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0011 int
+				var zb0012 bool
+				zb0011, zb0012, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if _, ok := err.(msgp.TypeError); ok {
-					zb0009, zb0010, bts, err = msgp.ReadArrayHeaderBytes(bts)
+					zb0011, zb0012, bts, err = msgp.ReadArrayHeaderBytes(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "VoteTrackerRound")
 						return
 					}
-					if zb0009 > 0 {
-						zb0009--
+					if zb0011 > 0 {
+						zb0011--
 						bts, err = (*z).VoteTrackerRound.Freshest.UnmarshalMsg(bts)
 						if err != nil {
 							err = msgp.WrapError(err, "VoteTrackerRound", "struct-from-array", "Freshest")
 							return
 						}
 					}
-					if zb0009 > 0 {
-						zb0009--
+					if zb0011 > 0 {
+						zb0011--
 						(*z).VoteTrackerRound.Ok, bts, err = msgp.ReadBoolBytes(bts)
 						if err != nil {
 							err = msgp.WrapError(err, "VoteTrackerRound", "struct-from-array", "Ok")
 							return
 						}
 					}
-					if zb0009 > 0 {
-						err = msgp.ErrTooManyArrayFields(zb0009)
+					if zb0011 > 0 {
+						err = msgp.ErrTooManyArrayFields(zb0011)
 						if err != nil {
 							err = msgp.WrapError(err, "VoteTrackerRound", "struct-from-array")
 							return
@@ -7340,11 +7510,11 @@ func (z *roundRouter) UnmarshalMsg(bts []byte) (o []byte, err error) {
 						err = msgp.WrapError(err, "VoteTrackerRound")
 						return
 					}
-					if zb0010 {
+					if zb0012 {
 						(*z).VoteTrackerRound = voteTrackerRound{}
 					}
-					for zb0009 > 0 {
-						zb0009--
+					for zb0011 > 0 {
+						zb0011--
 						field, bts, err = msgp.ReadMapKeyZC(bts)
 						if err != nil {
 							err = msgp.WrapError(err, "VoteTrackerRound")
@@ -7373,27 +7543,37 @@ func (z *roundRouter) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					}
 				}
 			case "Children":
-				var zb0011 int
-				var zb0012 bool
-				zb0011, zb0012, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0013 int
+				var zb0014 bool
+				zb0013, zb0014, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Children")
 					return
 				}
-				if zb0012 {
+				if zb0014 {
 					(*z).Children = nil
 				} else if (*z).Children == nil {
-					(*z).Children = make(map[period]*periodRouter, zb0011)
+					(*z).Children = make(map[period]*periodRouter, zb0013)
 				}
-				for zb0011 > 0 {
+				var zb0015 period
+				_ = zb0015
+				var zb0016 bool
+				_ = zb0016
+				for zb0013 > 0 {
 					var zb0001 period
 					var zb0002 *periodRouter
-					zb0011--
+					zb0013--
 					bts, err = zb0001.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Children")
 						return
 					}
+					if zb0016 && !PeriodLess(zb0015, zb0001) {
+						err = &msgp.ErrNonCanonical{}
+						return
+					}
+					zb0015 = zb0001
+					zb0016 = true
 					if msgp.IsNil(bts) {
 						bts, err = msgp.ReadNilBytes(bts)
 						if err != nil {
@@ -8728,6 +8908,10 @@ func (z *transmittedPayload) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			} else if (*z).unauthenticatedProposal.Block.BlockHeader.StateProofTracking == nil {
 				(*z).unauthenticatedProposal.Block.BlockHeader.StateProofTracking = make(map[protocol.StateProofType]bookkeeping.StateProofTrackingData, zb0007)
 			}
+			var zb0009 protocol.StateProofType
+			_ = zb0009
+			var zb0010 bool
+			_ = zb0010
 			for zb0007 > 0 {
 				var zb0001 protocol.StateProofType
 				var zb0002 bookkeeping.StateProofTrackingData
@@ -8737,6 +8921,12 @@ func (z *transmittedPayload) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					err = msgp.WrapError(err, "struct-from-array", "StateProofTracking")
 					return
 				}
+				if zb0010 && !protocol.StateProofTypeLess(zb0009, zb0001) {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				zb0009 = zb0001
+				zb0010 = true
 				bts, err = zb0002.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "StateProofTracking", zb0001)
@@ -8747,24 +8937,24 @@ func (z *transmittedPayload) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		}
 		if zb0004 > 0 {
 			zb0004--
-			var zb0009 int
-			var zb0010 bool
-			zb0009, zb0010, bts, err = msgp.ReadArrayHeaderBytes(bts)
+			var zb0011 int
+			var zb0012 bool
+			zb0011, zb0012, bts, err = msgp.ReadArrayHeaderBytes(bts)
 			if err != nil {
 				err = msgp.WrapError(err, "struct-from-array", "ExpiredParticipationAccounts")
 				return
 			}
-			if zb0009 > config.MaxProposedExpiredOnlineAccounts {
-				err = msgp.ErrOverflow(uint64(zb0009), uint64(config.MaxProposedExpiredOnlineAccounts))
+			if zb0011 > config.MaxProposedExpiredOnlineAccounts {
+				err = msgp.ErrOverflow(uint64(zb0011), uint64(config.MaxProposedExpiredOnlineAccounts))
 				err = msgp.WrapError(err, "struct-from-array", "ExpiredParticipationAccounts")
 				return
 			}
-			if zb0010 {
+			if zb0012 {
 				(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = nil
-			} else if (*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts != nil && cap((*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts) >= zb0009 {
-				(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = ((*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts)[:zb0009]
+			} else if (*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts != nil && cap((*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts) >= zb0011 {
+				(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = ((*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts)[:zb0011]
 			} else {
-				(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = make([]basics.Address, zb0009)
+				(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = make([]basics.Address, zb0011)
 			}
 			for zb0003 := range (*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts {
 				bts, err = (*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts[zb0003].UnmarshalMsg(bts)
@@ -8793,13 +8983,13 @@ func (z *transmittedPayload) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		if zb0004 > 0 {
 			zb0004--
 			{
-				var zb0011 uint64
-				zb0011, bts, err = msgp.ReadUint64Bytes(bts)
+				var zb0013 uint64
+				zb0013, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "OriginalPeriod")
 					return
 				}
-				(*z).unauthenticatedProposal.OriginalPeriod = period(zb0011)
+				(*z).unauthenticatedProposal.OriginalPeriod = period(zb0013)
 			}
 		}
 		if zb0004 > 0 {
@@ -8878,14 +9068,14 @@ func (z *transmittedPayload) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			case "gen":
-				var zb0012 int
-				zb0012, err = msgp.ReadBytesBytesHeader(bts)
+				var zb0014 int
+				zb0014, err = msgp.ReadBytesBytesHeader(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "GenesisID")
 					return
 				}
-				if zb0012 > config.MaxGenesisIDLen {
-					err = msgp.ErrOverflow(uint64(zb0012), uint64(config.MaxGenesisIDLen))
+				if zb0014 > config.MaxGenesisIDLen {
+					err = msgp.ErrOverflow(uint64(zb0014), uint64(config.MaxGenesisIDLen))
 					return
 				}
 				(*z).unauthenticatedProposal.Block.BlockHeader.GenesisID, bts, err = msgp.ReadStringBytes(bts)
@@ -8990,32 +9180,42 @@ func (z *transmittedPayload) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			case "spt":
-				var zb0013 int
-				var zb0014 bool
-				zb0013, zb0014, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0015 int
+				var zb0016 bool
+				zb0015, zb0016, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "StateProofTracking")
 					return
 				}
-				if zb0013 > protocol.NumStateProofTypes {
-					err = msgp.ErrOverflow(uint64(zb0013), uint64(protocol.NumStateProofTypes))
+				if zb0015 > protocol.NumStateProofTypes {
+					err = msgp.ErrOverflow(uint64(zb0015), uint64(protocol.NumStateProofTypes))
 					err = msgp.WrapError(err, "StateProofTracking")
 					return
 				}
-				if zb0014 {
+				if zb0016 {
 					(*z).unauthenticatedProposal.Block.BlockHeader.StateProofTracking = nil
 				} else if (*z).unauthenticatedProposal.Block.BlockHeader.StateProofTracking == nil {
-					(*z).unauthenticatedProposal.Block.BlockHeader.StateProofTracking = make(map[protocol.StateProofType]bookkeeping.StateProofTrackingData, zb0013)
+					(*z).unauthenticatedProposal.Block.BlockHeader.StateProofTracking = make(map[protocol.StateProofType]bookkeeping.StateProofTrackingData, zb0015)
 				}
-				for zb0013 > 0 {
+				var zb0017 protocol.StateProofType
+				_ = zb0017
+				var zb0018 bool
+				_ = zb0018
+				for zb0015 > 0 {
 					var zb0001 protocol.StateProofType
 					var zb0002 bookkeeping.StateProofTrackingData
-					zb0013--
+					zb0015--
 					bts, err = zb0001.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "StateProofTracking")
 						return
 					}
+					if zb0018 && !protocol.StateProofTypeLess(zb0017, zb0001) {
+						err = &msgp.ErrNonCanonical{}
+						return
+					}
+					zb0017 = zb0001
+					zb0018 = true
 					bts, err = zb0002.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "StateProofTracking", zb0001)
@@ -9024,24 +9224,24 @@ func (z *transmittedPayload) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					(*z).unauthenticatedProposal.Block.BlockHeader.StateProofTracking[zb0001] = zb0002
 				}
 			case "partupdrmv":
-				var zb0015 int
-				var zb0016 bool
-				zb0015, zb0016, bts, err = msgp.ReadArrayHeaderBytes(bts)
+				var zb0019 int
+				var zb0020 bool
+				zb0019, zb0020, bts, err = msgp.ReadArrayHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "ExpiredParticipationAccounts")
 					return
 				}
-				if zb0015 > config.MaxProposedExpiredOnlineAccounts {
-					err = msgp.ErrOverflow(uint64(zb0015), uint64(config.MaxProposedExpiredOnlineAccounts))
+				if zb0019 > config.MaxProposedExpiredOnlineAccounts {
+					err = msgp.ErrOverflow(uint64(zb0019), uint64(config.MaxProposedExpiredOnlineAccounts))
 					err = msgp.WrapError(err, "ExpiredParticipationAccounts")
 					return
 				}
-				if zb0016 {
+				if zb0020 {
 					(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = nil
-				} else if (*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts != nil && cap((*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts) >= zb0015 {
-					(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = ((*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts)[:zb0015]
+				} else if (*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts != nil && cap((*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts) >= zb0019 {
+					(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = ((*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts)[:zb0019]
 				} else {
-					(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = make([]basics.Address, zb0015)
+					(*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = make([]basics.Address, zb0019)
 				}
 				for zb0003 := range (*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts {
 					bts, err = (*z).unauthenticatedProposal.Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts[zb0003].UnmarshalMsg(bts)
@@ -9064,13 +9264,13 @@ func (z *transmittedPayload) UnmarshalMsg(bts []byte) (o []byte, err error) {
 				}
 			case "oper":
 				{
-					var zb0017 uint64
-					zb0017, bts, err = msgp.ReadUint64Bytes(bts)
+					var zb0021 uint64
+					zb0021, bts, err = msgp.ReadUint64Bytes(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "OriginalPeriod")
 						return
 					}
-					(*z).unauthenticatedProposal.OriginalPeriod = period(zb0017)
+					(*z).unauthenticatedProposal.OriginalPeriod = period(zb0021)
 				}
 			case "oprop":
 				bts, err = (*z).unauthenticatedProposal.OriginalProposer.UnmarshalMsg(bts)
@@ -10355,6 +10555,10 @@ func (z *unauthenticatedProposal) UnmarshalMsg(bts []byte) (o []byte, err error)
 			} else if (*z).Block.BlockHeader.StateProofTracking == nil {
 				(*z).Block.BlockHeader.StateProofTracking = make(map[protocol.StateProofType]bookkeeping.StateProofTrackingData, zb0007)
 			}
+			var zb0009 protocol.StateProofType
+			_ = zb0009
+			var zb0010 bool
+			_ = zb0010
 			for zb0007 > 0 {
 				var zb0001 protocol.StateProofType
 				var zb0002 bookkeeping.StateProofTrackingData
@@ -10364,6 +10568,12 @@ func (z *unauthenticatedProposal) UnmarshalMsg(bts []byte) (o []byte, err error)
 					err = msgp.WrapError(err, "struct-from-array", "StateProofTracking")
 					return
 				}
+				if zb0010 && !protocol.StateProofTypeLess(zb0009, zb0001) {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				zb0009 = zb0001
+				zb0010 = true
 				bts, err = zb0002.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "StateProofTracking", zb0001)
@@ -10374,24 +10584,24 @@ func (z *unauthenticatedProposal) UnmarshalMsg(bts []byte) (o []byte, err error)
 		}
 		if zb0004 > 0 {
 			zb0004--
-			var zb0009 int
-			var zb0010 bool
-			zb0009, zb0010, bts, err = msgp.ReadArrayHeaderBytes(bts)
+			var zb0011 int
+			var zb0012 bool
+			zb0011, zb0012, bts, err = msgp.ReadArrayHeaderBytes(bts)
 			if err != nil {
 				err = msgp.WrapError(err, "struct-from-array", "ExpiredParticipationAccounts")
 				return
 			}
-			if zb0009 > config.MaxProposedExpiredOnlineAccounts {
-				err = msgp.ErrOverflow(uint64(zb0009), uint64(config.MaxProposedExpiredOnlineAccounts))
+			if zb0011 > config.MaxProposedExpiredOnlineAccounts {
+				err = msgp.ErrOverflow(uint64(zb0011), uint64(config.MaxProposedExpiredOnlineAccounts))
 				err = msgp.WrapError(err, "struct-from-array", "ExpiredParticipationAccounts")
 				return
 			}
-			if zb0010 {
+			if zb0012 {
 				(*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = nil
-			} else if (*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts != nil && cap((*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts) >= zb0009 {
-				(*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = ((*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts)[:zb0009]
+			} else if (*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts != nil && cap((*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts) >= zb0011 {
+				(*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = ((*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts)[:zb0011]
 			} else {
-				(*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = make([]basics.Address, zb0009)
+				(*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = make([]basics.Address, zb0011)
 			}
 			for zb0003 := range (*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts {
 				bts, err = (*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts[zb0003].UnmarshalMsg(bts)
@@ -10420,13 +10630,13 @@ func (z *unauthenticatedProposal) UnmarshalMsg(bts []byte) (o []byte, err error)
 		if zb0004 > 0 {
 			zb0004--
 			{
-				var zb0011 uint64
-				zb0011, bts, err = msgp.ReadUint64Bytes(bts)
+				var zb0013 uint64
+				zb0013, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "OriginalPeriod")
 					return
 				}
-				(*z).OriginalPeriod = period(zb0011)
+				(*z).OriginalPeriod = period(zb0013)
 			}
 		}
 		if zb0004 > 0 {
@@ -10497,14 +10707,14 @@ func (z *unauthenticatedProposal) UnmarshalMsg(bts []byte) (o []byte, err error)
 					return
 				}
 			case "gen":
-				var zb0012 int
-				zb0012, err = msgp.ReadBytesBytesHeader(bts)
+				var zb0014 int
+				zb0014, err = msgp.ReadBytesBytesHeader(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "GenesisID")
 					return
 				}
-				if zb0012 > config.MaxGenesisIDLen {
-					err = msgp.ErrOverflow(uint64(zb0012), uint64(config.MaxGenesisIDLen))
+				if zb0014 > config.MaxGenesisIDLen {
+					err = msgp.ErrOverflow(uint64(zb0014), uint64(config.MaxGenesisIDLen))
 					return
 				}
 				(*z).Block.BlockHeader.GenesisID, bts, err = msgp.ReadStringBytes(bts)
@@ -10609,32 +10819,42 @@ func (z *unauthenticatedProposal) UnmarshalMsg(bts []byte) (o []byte, err error)
 					return
 				}
 			case "spt":
-				var zb0013 int
-				var zb0014 bool
-				zb0013, zb0014, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0015 int
+				var zb0016 bool
+				zb0015, zb0016, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "StateProofTracking")
 					return
 				}
-				if zb0013 > protocol.NumStateProofTypes {
-					err = msgp.ErrOverflow(uint64(zb0013), uint64(protocol.NumStateProofTypes))
+				if zb0015 > protocol.NumStateProofTypes {
+					err = msgp.ErrOverflow(uint64(zb0015), uint64(protocol.NumStateProofTypes))
 					err = msgp.WrapError(err, "StateProofTracking")
 					return
 				}
-				if zb0014 {
+				if zb0016 {
 					(*z).Block.BlockHeader.StateProofTracking = nil
 				} else if (*z).Block.BlockHeader.StateProofTracking == nil {
-					(*z).Block.BlockHeader.StateProofTracking = make(map[protocol.StateProofType]bookkeeping.StateProofTrackingData, zb0013)
+					(*z).Block.BlockHeader.StateProofTracking = make(map[protocol.StateProofType]bookkeeping.StateProofTrackingData, zb0015)
 				}
-				for zb0013 > 0 {
+				var zb0017 protocol.StateProofType
+				_ = zb0017
+				var zb0018 bool
+				_ = zb0018
+				for zb0015 > 0 {
 					var zb0001 protocol.StateProofType
 					var zb0002 bookkeeping.StateProofTrackingData
-					zb0013--
+					zb0015--
 					bts, err = zb0001.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "StateProofTracking")
 						return
 					}
+					if zb0018 && !protocol.StateProofTypeLess(zb0017, zb0001) {
+						err = &msgp.ErrNonCanonical{}
+						return
+					}
+					zb0017 = zb0001
+					zb0018 = true
 					bts, err = zb0002.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "StateProofTracking", zb0001)
@@ -10643,24 +10863,24 @@ func (z *unauthenticatedProposal) UnmarshalMsg(bts []byte) (o []byte, err error)
 					(*z).Block.BlockHeader.StateProofTracking[zb0001] = zb0002
 				}
 			case "partupdrmv":
-				var zb0015 int
-				var zb0016 bool
-				zb0015, zb0016, bts, err = msgp.ReadArrayHeaderBytes(bts)
+				var zb0019 int
+				var zb0020 bool
+				zb0019, zb0020, bts, err = msgp.ReadArrayHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "ExpiredParticipationAccounts")
 					return
 				}
-				if zb0015 > config.MaxProposedExpiredOnlineAccounts {
-					err = msgp.ErrOverflow(uint64(zb0015), uint64(config.MaxProposedExpiredOnlineAccounts))
+				if zb0019 > config.MaxProposedExpiredOnlineAccounts {
+					err = msgp.ErrOverflow(uint64(zb0019), uint64(config.MaxProposedExpiredOnlineAccounts))
 					err = msgp.WrapError(err, "ExpiredParticipationAccounts")
 					return
 				}
-				if zb0016 {
+				if zb0020 {
 					(*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = nil
-				} else if (*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts != nil && cap((*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts) >= zb0015 {
-					(*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = ((*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts)[:zb0015]
+				} else if (*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts != nil && cap((*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts) >= zb0019 {
+					(*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = ((*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts)[:zb0019]
 				} else {
-					(*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = make([]basics.Address, zb0015)
+					(*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts = make([]basics.Address, zb0019)
 				}
 				for zb0003 := range (*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts {
 					bts, err = (*z).Block.BlockHeader.ParticipationUpdates.ExpiredParticipationAccounts[zb0003].UnmarshalMsg(bts)
@@ -10683,13 +10903,13 @@ func (z *unauthenticatedProposal) UnmarshalMsg(bts []byte) (o []byte, err error)
 				}
 			case "oper":
 				{
-					var zb0017 uint64
-					zb0017, bts, err = msgp.ReadUint64Bytes(bts)
+					var zb0021 uint64
+					zb0021, bts, err = msgp.ReadUint64Bytes(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "OriginalPeriod")
 						return
 					}
-					(*z).OriginalPeriod = period(zb0017)
+					(*z).OriginalPeriod = period(zb0021)
 				}
 			case "oprop":
 				bts, err = (*z).OriginalProposer.UnmarshalMsg(bts)
@@ -11398,6 +11618,10 @@ func (z *voteTracker) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			} else if (*z).Voters == nil {
 				(*z).Voters = make(map[basics.Address]vote, zb0009)
 			}
+			var zb0011 basics.Address
+			_ = zb0011
+			var zb0012 bool
+			_ = zb0012
 			for zb0009 > 0 {
 				var zb0001 basics.Address
 				var zb0002 vote
@@ -11407,6 +11631,12 @@ func (z *voteTracker) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					err = msgp.WrapError(err, "struct-from-array", "Voters")
 					return
 				}
+				if zb0012 && !basics.AddressLess(zb0011, zb0001) {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				zb0011 = zb0001
+				zb0012 = true
 				bts, err = zb0002.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "Voters", zb0001)
@@ -11417,27 +11647,37 @@ func (z *voteTracker) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		}
 		if zb0007 > 0 {
 			zb0007--
-			var zb0011 int
-			var zb0012 bool
-			zb0011, zb0012, bts, err = msgp.ReadMapHeaderBytes(bts)
+			var zb0013 int
+			var zb0014 bool
+			zb0013, zb0014, bts, err = msgp.ReadMapHeaderBytes(bts)
 			if err != nil {
 				err = msgp.WrapError(err, "struct-from-array", "Counts")
 				return
 			}
-			if zb0012 {
+			if zb0014 {
 				(*z).Counts = nil
 			} else if (*z).Counts == nil {
-				(*z).Counts = make(map[proposalValue]proposalVoteCounter, zb0011)
+				(*z).Counts = make(map[proposalValue]proposalVoteCounter, zb0013)
 			}
-			for zb0011 > 0 {
+			var zb0015 proposalValue
+			_ = zb0015
+			var zb0016 bool
+			_ = zb0016
+			for zb0013 > 0 {
 				var zb0003 proposalValue
 				var zb0004 proposalVoteCounter
-				zb0011--
+				zb0013--
 				bts, err = zb0003.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "Counts")
 					return
 				}
+				if zb0016 && !ProposalValueLess(zb0015, zb0003) {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				zb0015 = zb0003
+				zb0016 = true
 				bts, err = zb0004.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "Counts", zb0003)
@@ -11448,27 +11688,37 @@ func (z *voteTracker) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		}
 		if zb0007 > 0 {
 			zb0007--
-			var zb0013 int
-			var zb0014 bool
-			zb0013, zb0014, bts, err = msgp.ReadMapHeaderBytes(bts)
+			var zb0017 int
+			var zb0018 bool
+			zb0017, zb0018, bts, err = msgp.ReadMapHeaderBytes(bts)
 			if err != nil {
 				err = msgp.WrapError(err, "struct-from-array", "Equivocators")
 				return
 			}
-			if zb0014 {
+			if zb0018 {
 				(*z).Equivocators = nil
 			} else if (*z).Equivocators == nil {
-				(*z).Equivocators = make(map[basics.Address]equivocationVote, zb0013)
+				(*z).Equivocators = make(map[basics.Address]equivocationVote, zb0017)
 			}
-			for zb0013 > 0 {
+			var zb0019 basics.Address
+			_ = zb0019
+			var zb0020 bool
+			_ = zb0020
+			for zb0017 > 0 {
 				var zb0005 basics.Address
 				var zb0006 equivocationVote
-				zb0013--
+				zb0017--
 				bts, err = zb0005.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "Equivocators")
 					return
 				}
+				if zb0020 && !basics.AddressLess(zb0019, zb0005) {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				zb0019 = zb0005
+				zb0020 = true
 				bts, err = zb0006.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "Equivocators", zb0005)
@@ -11509,27 +11759,37 @@ func (z *voteTracker) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "Voters":
-				var zb0015 int
-				var zb0016 bool
-				zb0015, zb0016, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0021 int
+				var zb0022 bool
+				zb0021, zb0022, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Voters")
 					return
 				}
-				if zb0016 {
+				if zb0022 {
 					(*z).Voters = nil
 				} else if (*z).Voters == nil {
-					(*z).Voters = make(map[basics.Address]vote, zb0015)
+					(*z).Voters = make(map[basics.Address]vote, zb0021)
 				}
-				for zb0015 > 0 {
+				var zb0023 basics.Address
+				_ = zb0023
+				var zb0024 bool
+				_ = zb0024
+				for zb0021 > 0 {
 					var zb0001 basics.Address
 					var zb0002 vote
-					zb0015--
+					zb0021--
 					bts, err = zb0001.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Voters")
 						return
 					}
+					if zb0024 && !basics.AddressLess(zb0023, zb0001) {
+						err = &msgp.ErrNonCanonical{}
+						return
+					}
+					zb0023 = zb0001
+					zb0024 = true
 					bts, err = zb0002.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Voters", zb0001)
@@ -11538,27 +11798,37 @@ func (z *voteTracker) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					(*z).Voters[zb0001] = zb0002
 				}
 			case "Counts":
-				var zb0017 int
-				var zb0018 bool
-				zb0017, zb0018, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0025 int
+				var zb0026 bool
+				zb0025, zb0026, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Counts")
 					return
 				}
-				if zb0018 {
+				if zb0026 {
 					(*z).Counts = nil
 				} else if (*z).Counts == nil {
-					(*z).Counts = make(map[proposalValue]proposalVoteCounter, zb0017)
+					(*z).Counts = make(map[proposalValue]proposalVoteCounter, zb0025)
 				}
-				for zb0017 > 0 {
+				var zb0027 proposalValue
+				_ = zb0027
+				var zb0028 bool
+				_ = zb0028
+				for zb0025 > 0 {
 					var zb0003 proposalValue
 					var zb0004 proposalVoteCounter
-					zb0017--
+					zb0025--
 					bts, err = zb0003.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Counts")
 						return
 					}
+					if zb0028 && !ProposalValueLess(zb0027, zb0003) {
+						err = &msgp.ErrNonCanonical{}
+						return
+					}
+					zb0027 = zb0003
+					zb0028 = true
 					bts, err = zb0004.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Counts", zb0003)
@@ -11567,27 +11837,37 @@ func (z *voteTracker) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					(*z).Counts[zb0003] = zb0004
 				}
 			case "Equivocators":
-				var zb0019 int
-				var zb0020 bool
-				zb0019, zb0020, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0029 int
+				var zb0030 bool
+				zb0029, zb0030, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Equivocators")
 					return
 				}
-				if zb0020 {
+				if zb0030 {
 					(*z).Equivocators = nil
 				} else if (*z).Equivocators == nil {
-					(*z).Equivocators = make(map[basics.Address]equivocationVote, zb0019)
+					(*z).Equivocators = make(map[basics.Address]equivocationVote, zb0029)
 				}
-				for zb0019 > 0 {
+				var zb0031 basics.Address
+				_ = zb0031
+				var zb0032 bool
+				_ = zb0032
+				for zb0029 > 0 {
 					var zb0005 basics.Address
 					var zb0006 equivocationVote
-					zb0019--
+					zb0029--
 					bts, err = zb0005.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Equivocators")
 						return
 					}
+					if zb0032 && !basics.AddressLess(zb0031, zb0005) {
+						err = &msgp.ErrNonCanonical{}
+						return
+					}
+					zb0031 = zb0005
+					zb0032 = true
 					bts, err = zb0006.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Equivocators", zb0005)

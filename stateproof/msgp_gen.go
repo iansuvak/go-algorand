@@ -316,6 +316,10 @@ func (z *spProver) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			} else if (*z).AddrToPos == nil {
 				(*z).AddrToPos = make(map[Address]uint64, zb0005)
 			}
+			var zb0007 basics.Address
+			_ = zb0007
+			var zb0008 bool
+			_ = zb0008
 			for zb0005 > 0 {
 				var zb0001 basics.Address
 				var zb0002 uint64
@@ -325,6 +329,12 @@ func (z *spProver) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					err = msgp.WrapError(err, "struct-from-array", "AddrToPos")
 					return
 				}
+				if zb0008 && !basics.AddressLess(zb0007, zb0001) {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				zb0007 = zb0001
+				zb0008 = true
 				zb0002, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "AddrToPos", zb0001)
@@ -390,32 +400,42 @@ func (z *spProver) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					}
 				}
 			case "addr":
-				var zb0007 int
-				var zb0008 bool
-				zb0007, zb0008, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0009 int
+				var zb0010 bool
+				zb0009, zb0010, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "AddrToPos")
 					return
 				}
-				if zb0007 > stateproof.VotersAllocBound {
-					err = msgp.ErrOverflow(uint64(zb0007), uint64(stateproof.VotersAllocBound))
+				if zb0009 > stateproof.VotersAllocBound {
+					err = msgp.ErrOverflow(uint64(zb0009), uint64(stateproof.VotersAllocBound))
 					err = msgp.WrapError(err, "AddrToPos")
 					return
 				}
-				if zb0008 {
+				if zb0010 {
 					(*z).AddrToPos = nil
 				} else if (*z).AddrToPos == nil {
-					(*z).AddrToPos = make(map[Address]uint64, zb0007)
+					(*z).AddrToPos = make(map[Address]uint64, zb0009)
 				}
-				for zb0007 > 0 {
+				var zb0011 basics.Address
+				_ = zb0011
+				var zb0012 bool
+				_ = zb0012
+				for zb0009 > 0 {
 					var zb0001 basics.Address
 					var zb0002 uint64
-					zb0007--
+					zb0009--
 					bts, err = zb0001.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "AddrToPos")
 						return
 					}
+					if zb0012 && !basics.AddressLess(zb0011, zb0001) {
+						err = &msgp.ErrNonCanonical{}
+						return
+					}
+					zb0011 = zb0001
+					zb0012 = true
 					zb0002, bts, err = msgp.ReadUint64Bytes(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "AddrToPos", zb0001)

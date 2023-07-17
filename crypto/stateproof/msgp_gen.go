@@ -1261,6 +1261,10 @@ func (z *StateProof) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			} else if (*z).Reveals == nil {
 				(*z).Reveals = make(map[uint64]Reveal, zb0006)
 			}
+			var zb0008 uint64
+			_ = zb0008
+			var zb0009 bool
+			_ = zb0009
 			for zb0006 > 0 {
 				var zb0001 uint64
 				var zb0002 Reveal
@@ -1270,6 +1274,12 @@ func (z *StateProof) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					err = msgp.WrapError(err, "struct-from-array", "Reveals")
 					return
 				}
+				if zb0009 && !Uint64Less(zb0008, zb0001) {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				zb0008 = zb0001
+				zb0009 = true
 				bts, err = zb0002.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "Reveals", zb0001)
@@ -1280,24 +1290,24 @@ func (z *StateProof) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		}
 		if zb0004 > 0 {
 			zb0004--
-			var zb0008 int
-			var zb0009 bool
-			zb0008, zb0009, bts, err = msgp.ReadArrayHeaderBytes(bts)
+			var zb0010 int
+			var zb0011 bool
+			zb0010, zb0011, bts, err = msgp.ReadArrayHeaderBytes(bts)
 			if err != nil {
 				err = msgp.WrapError(err, "struct-from-array", "PositionsToReveal")
 				return
 			}
-			if zb0008 > MaxReveals {
-				err = msgp.ErrOverflow(uint64(zb0008), uint64(MaxReveals))
+			if zb0010 > MaxReveals {
+				err = msgp.ErrOverflow(uint64(zb0010), uint64(MaxReveals))
 				err = msgp.WrapError(err, "struct-from-array", "PositionsToReveal")
 				return
 			}
-			if zb0009 {
+			if zb0011 {
 				(*z).PositionsToReveal = nil
-			} else if (*z).PositionsToReveal != nil && cap((*z).PositionsToReveal) >= zb0008 {
-				(*z).PositionsToReveal = ((*z).PositionsToReveal)[:zb0008]
+			} else if (*z).PositionsToReveal != nil && cap((*z).PositionsToReveal) >= zb0010 {
+				(*z).PositionsToReveal = ((*z).PositionsToReveal)[:zb0010]
 			} else {
-				(*z).PositionsToReveal = make([]uint64, zb0008)
+				(*z).PositionsToReveal = make([]uint64, zb0010)
 			}
 			for zb0003 := range (*z).PositionsToReveal {
 				(*z).PositionsToReveal[zb0003], bts, err = msgp.ReadUint64Bytes(bts)
@@ -1361,32 +1371,42 @@ func (z *StateProof) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			case "r":
-				var zb0010 int
-				var zb0011 bool
-				zb0010, zb0011, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0012 int
+				var zb0013 bool
+				zb0012, zb0013, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Reveals")
 					return
 				}
-				if zb0010 > MaxReveals {
-					err = msgp.ErrOverflow(uint64(zb0010), uint64(MaxReveals))
+				if zb0012 > MaxReveals {
+					err = msgp.ErrOverflow(uint64(zb0012), uint64(MaxReveals))
 					err = msgp.WrapError(err, "Reveals")
 					return
 				}
-				if zb0011 {
+				if zb0013 {
 					(*z).Reveals = nil
 				} else if (*z).Reveals == nil {
-					(*z).Reveals = make(map[uint64]Reveal, zb0010)
+					(*z).Reveals = make(map[uint64]Reveal, zb0012)
 				}
-				for zb0010 > 0 {
+				var zb0014 uint64
+				_ = zb0014
+				var zb0015 bool
+				_ = zb0015
+				for zb0012 > 0 {
 					var zb0001 uint64
 					var zb0002 Reveal
-					zb0010--
+					zb0012--
 					zb0001, bts, err = msgp.ReadUint64Bytes(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Reveals")
 						return
 					}
+					if zb0015 && !Uint64Less(zb0014, zb0001) {
+						err = &msgp.ErrNonCanonical{}
+						return
+					}
+					zb0014 = zb0001
+					zb0015 = true
 					bts, err = zb0002.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Reveals", zb0001)
@@ -1395,24 +1415,24 @@ func (z *StateProof) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					(*z).Reveals[zb0001] = zb0002
 				}
 			case "pr":
-				var zb0012 int
-				var zb0013 bool
-				zb0012, zb0013, bts, err = msgp.ReadArrayHeaderBytes(bts)
+				var zb0016 int
+				var zb0017 bool
+				zb0016, zb0017, bts, err = msgp.ReadArrayHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "PositionsToReveal")
 					return
 				}
-				if zb0012 > MaxReveals {
-					err = msgp.ErrOverflow(uint64(zb0012), uint64(MaxReveals))
+				if zb0016 > MaxReveals {
+					err = msgp.ErrOverflow(uint64(zb0016), uint64(MaxReveals))
 					err = msgp.WrapError(err, "PositionsToReveal")
 					return
 				}
-				if zb0013 {
+				if zb0017 {
 					(*z).PositionsToReveal = nil
-				} else if (*z).PositionsToReveal != nil && cap((*z).PositionsToReveal) >= zb0012 {
-					(*z).PositionsToReveal = ((*z).PositionsToReveal)[:zb0012]
+				} else if (*z).PositionsToReveal != nil && cap((*z).PositionsToReveal) >= zb0016 {
+					(*z).PositionsToReveal = ((*z).PositionsToReveal)[:zb0016]
 				} else {
-					(*z).PositionsToReveal = make([]uint64, zb0012)
+					(*z).PositionsToReveal = make([]uint64, zb0016)
 				}
 				for zb0003 := range (*z).PositionsToReveal {
 					(*z).PositionsToReveal[zb0003], bts, err = msgp.ReadUint64Bytes(bts)

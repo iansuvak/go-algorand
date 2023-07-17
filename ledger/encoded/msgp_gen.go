@@ -292,6 +292,10 @@ func (z *BalanceRecordV6) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			} else if (*z).Resources == nil {
 				(*z).Resources = make(map[uint64]msgp.Raw, zb0005)
 			}
+			var zb0007 uint64
+			_ = zb0007
+			var zb0008 bool
+			_ = zb0008
 			for zb0005 > 0 {
 				var zb0001 uint64
 				var zb0002 msgp.Raw
@@ -301,6 +305,12 @@ func (z *BalanceRecordV6) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					err = msgp.WrapError(err, "struct-from-array", "Resources")
 					return
 				}
+				if zb0008 && !Uint64Less(zb0007, zb0001) {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				zb0007 = zb0001
+				zb0008 = true
 				bts, err = zb0002.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "Resources", zb0001)
@@ -353,32 +363,42 @@ func (z *BalanceRecordV6) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			case "c":
-				var zb0007 int
-				var zb0008 bool
-				zb0007, zb0008, bts, err = msgp.ReadMapHeaderBytes(bts)
+				var zb0009 int
+				var zb0010 bool
+				zb0009, zb0010, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Resources")
 					return
 				}
-				if zb0007 > resourcesPerCatchpointFileChunkBackwardCompatible {
-					err = msgp.ErrOverflow(uint64(zb0007), uint64(resourcesPerCatchpointFileChunkBackwardCompatible))
+				if zb0009 > resourcesPerCatchpointFileChunkBackwardCompatible {
+					err = msgp.ErrOverflow(uint64(zb0009), uint64(resourcesPerCatchpointFileChunkBackwardCompatible))
 					err = msgp.WrapError(err, "Resources")
 					return
 				}
-				if zb0008 {
+				if zb0010 {
 					(*z).Resources = nil
 				} else if (*z).Resources == nil {
-					(*z).Resources = make(map[uint64]msgp.Raw, zb0007)
+					(*z).Resources = make(map[uint64]msgp.Raw, zb0009)
 				}
-				for zb0007 > 0 {
+				var zb0011 uint64
+				_ = zb0011
+				var zb0012 bool
+				_ = zb0012
+				for zb0009 > 0 {
 					var zb0001 uint64
 					var zb0002 msgp.Raw
-					zb0007--
+					zb0009--
 					zb0001, bts, err = msgp.ReadUint64Bytes(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Resources")
 						return
 					}
+					if zb0012 && !Uint64Less(zb0011, zb0001) {
+						err = &msgp.ErrNonCanonical{}
+						return
+					}
+					zb0011 = zb0001
+					zb0012 = true
 					bts, err = zb0002.UnmarshalMsg(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Resources", zb0001)

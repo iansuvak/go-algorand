@@ -24,6 +24,8 @@ import (
 
 // These types are defined to satisfy SortInterface used by
 
+func Uint64Less(a, b uint64) bool { return a < b }
+
 // SortAddress is re-exported from basics.Address since the interface is already defined there
 //
 //msgp:sort basics.Address SortAddress basics.AddressLess
@@ -59,7 +61,7 @@ func PeriodLess(a, b period) bool       { return a < b }
 // note, for type aliases the base type is used for the interface
 //
 //msgp:ignore SortRound
-//msgp:sort basics.Round SortRound basics.RoundLess
+//msgp:sort basics.Round SortRound RoundLess
 type SortRound []basics.Round
 
 func (a SortRound) Len() int           { return len(a) }
