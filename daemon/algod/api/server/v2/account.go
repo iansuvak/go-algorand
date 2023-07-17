@@ -1,4 +1,4 @@
-// Copyright (C) 2019-2022 Algorand, Inc.
+// Copyright (C) 2019-2023 Algorand, Inc.
 // This file is part of go-algorand
 //
 // go-algorand is free software: you can redistribute it and/or modify
@@ -26,7 +26,17 @@ import (
 	"github.com/algorand/go-algorand/crypto"
 	"github.com/algorand/go-algorand/daemon/algod/api/server/v2/generated/model"
 	"github.com/algorand/go-algorand/data/basics"
+	"golang.org/x/exp/slices"
 )
+
+// AssetHolding converts between basics.AssetHolding and model.AssetHolding
+func AssetHolding(ah basics.AssetHolding, ai basics.AssetIndex) model.AssetHolding {
+	return model.AssetHolding{
+		Amount:   ah.Amount,
+		AssetID:  uint64(ai),
+		IsFrozen: ah.Frozen,
+	}
+}
 
 // AccountDataToAccount converts basics.AccountData to v2.model.Account
 func AccountDataToAccount(
@@ -39,11 +49,7 @@ func AccountDataToAccount(
 	for curid, holding := range record.Assets {
 		// Empty is ok, asset may have been deleted, so we can no
 		// longer fetch the creator
-		holding := model.AssetHolding{
-			Amount:   holding.Amount,
-			AssetID:  uint64(curid),
-			IsFrozen: holding.Frozen,
-		}
+		holding := AssetHolding(holding, curid)
 
 		assets = append(assets, holding)
 	}
@@ -86,15 +92,7 @@ func AccountDataToAccount(
 
 	appsLocalState := make([]model.ApplicationLocalState, 0, len(record.AppLocalStates))
 	for appIdx, state := range record.AppLocalStates {
-		localState := convertTKVToGenerated(&state.KeyValue)
-		appsLocalState = append(appsLocalState, model.ApplicationLocalState{
-			Id:       uint64(appIdx),
-			KeyValue: localState,
-			Schema: model.ApplicationStateSchema{
-				NumByteSlice: state.Schema.NumByteSlice,
-				NumUint:      state.Schema.NumUint,
-			},
-		})
+		appsLocalState = append(appsLocalState, AppLocalState(state, appIdx))
 	}
 	sort.Slice(appsLocalState, func(i, j int) bool {
 		return appsLocalState[i].Id < appsLocalState[j].Id
@@ -135,9 +133,9 @@ func AccountDataToAccount(
 		AppsLocalState:              &appsLocalState,
 		TotalAppsOptedIn:            uint64(len(appsLocalState)),
 		AppsTotalSchema:             &totalAppSchema,
-		AppsTotalExtraPages:         numOrNil(totalExtraPages),
-		TotalBoxes:                  numOrNil(record.TotalBoxes),
-		TotalBoxBytes:               numOrNil(record.TotalBoxBytes),
+		AppsTotalExtraPages:         omitEmpty(totalExtraPages),
+		TotalBoxes:                  omitEmpty(record.TotalBoxes),
+		TotalBoxBytes:               omitEmpty(record.TotalBoxBytes),
 		MinBalance:                  minBalance.Raw,
 	}, nil
 }
@@ -432,7 +430,7 @@ func AppParamsToApplication(creator string, appIdx basics.AppIndex, appParams *b
 			Creator:           creator,
 			ApprovalProgram:   appParams.ApprovalProgram,
 			ClearStateProgram: appParams.ClearStateProgram,
-			ExtraProgramPages: numOrNil(extraProgramPages),
+			ExtraProgramPages: omitEmpty(extraProgramPages),
 			GlobalState:       globalState,
 			LocalStateSchema: &model.ApplicationStateSchema{
 				NumByteSlice: appParams.LocalStateSchema.NumByteSlice,
@@ -447,6 +445,19 @@ func AppParamsToApplication(creator string, appIdx basics.AppIndex, appParams *b
 	return app
 }
 
+// AppLocalState converts between basics.AppLocalState and model.ApplicationLocalState
+func AppLocalState(state basics.AppLocalState, appIdx basics.AppIndex) model.ApplicationLocalState {
+	localState := convertTKVToGenerated(&state.KeyValue)
+	return model.ApplicationLocalState{
+		Id:       uint64(appIdx),
+		KeyValue: localState,
+		Schema: model.ApplicationStateSchema{
+			NumByteSlice: state.Schema.NumByteSlice,
+			NumUint:      state.Schema.NumUint,
+		},
+	}
+}
+
 // AssetParamsToAsset converts basics.AssetParams to model.Asset
 func AssetParamsToAsset(creator string, idx basics.AssetIndex, params *basics.AssetParams) model.Asset {
 	frozen := params.DefaultFrozen
@@ -455,11 +466,11 @@ func AssetParamsToAsset(creator string, idx basics.AssetIndex, params *basics.As
 		Total:         params.Total,
 		Decimals:      uint64(params.Decimals),
 		DefaultFrozen: &frozen,
-		Name:          strOrNil(printableUTF8OrEmpty(params.AssetName)),
+		Name:          omitEmpty(printableUTF8OrEmpty(params.AssetName)),
 		NameB64:       byteOrNil([]byte(params.AssetName)),
-		UnitName:      strOrNil(printableUTF8OrEmpty(params.UnitName)),
+		UnitName:      omitEmpty(printableUTF8OrEmpty(params.UnitName)),
 		UnitNameB64:   byteOrNil([]byte(params.UnitName)),
-		Url:           strOrNil(printableUTF8OrEmpty(params.URL)),
+		Url:           omitEmpty(printableUTF8OrEmpty(params.URL)),
 		UrlB64:        byteOrNil([]byte(params.URL)),
 		Clawback:      addrOrNil(params.Clawback),
 		Freeze:        addrOrNil(params.Freeze),
@@ -467,8 +478,7 @@ func AssetParamsToAsset(creator string, idx basics.AssetIndex, params *basics.As
 		Reserve:       addrOrNil(params.Reserve),
 	}
 	if params.MetadataHash != ([32]byte{}) {
-		metadataHash := make([]byte, len(params.MetadataHash))
-		copy(metadataHash, params.MetadataHash[:])
+		metadataHash := slices.Clone(params.MetadataHash[:])
 		assetParams.MetadataHash = &metadataHash
 	}
 

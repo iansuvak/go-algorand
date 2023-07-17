@@ -1,4 +1,4 @@
-// Copyright (C) 2019-2022 Algorand, Inc.
+// Copyright (C) 2019-2023 Algorand, Inc.
 // This file is part of go-algorand
 //
 // go-algorand is free software: you can redistribute it and/or modify
@@ -148,7 +148,7 @@ func (b *basicRPCNode) RegisterHandlers(dispatch []network.TaggedMessageHandler)
 
 func (b *basicRPCNode) start() bool {
 	var err error
-	b.listener, err = net.Listen("tcp", "")
+	b.listener, err = net.Listen("tcp", "127.0.0.1:")
 	if err != nil {
 		logging.Base().Error("tcp listen", err)
 		return false
@@ -268,7 +268,7 @@ func (p *testUnicastPeer) Request(ctx context.Context, tag protocol.Tag, topics 
 	}
 }
 
-func (p *testUnicastPeer) Respond(ctx context.Context, reqMsg network.IncomingMessage, responseTopics network.Topics) (e error) {
+func (p *testUnicastPeer) Respond(ctx context.Context, reqMsg network.IncomingMessage, outMsg network.OutgoingMessage) (e error) {
 
 	hashKey := uint64(0)
 	channel, found := p.responseChannels[hashKey]
@@ -276,7 +276,7 @@ func (p *testUnicastPeer) Respond(ctx context.Context, reqMsg network.IncomingMe
 	}
 
 	select {
-	case channel <- &network.Response{Topics: responseTopics}:
+	case channel <- &network.Response{Topics: outMsg.Topics}:
 	default:
 	}
 

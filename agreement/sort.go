@@ -1,4 +1,4 @@
-// Copyright (C) 2019-2022 Algorand, Inc.
+// Copyright (C) 2019-2023 Algorand, Inc.
 // This file is part of go-algorand
 //
 // go-algorand is free software: you can redistribute it and/or modify
@@ -25,6 +25,7 @@ import (
 // These types are defined to satisfy SortInterface used by
 
 // SortAddress is re-exported from basics.Address since the interface is already defined there
+//
 //msgp:sort basics.Address SortAddress basics.AddressLess
 type SortAddress = basics.SortAddress
 
@@ -33,6 +34,7 @@ type SortAddress = basics.SortAddress
 type SortUint64 = basics.SortUint64
 
 // SortStep defines SortInterface used by msgp to consistently sort maps with this type as key.
+//
 //msgp:ignore SortStep
 //msgp:sort step SortStep StepLess
 type SortStep []step
@@ -43,6 +45,7 @@ func (a SortStep) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func StepLess(a, b step) bool         { return a < b }
 
 // SortPeriod defines SortInterface used by msgp to consistently sort maps with this type as key.
+//
 //msgp:ignore SortPeriod
 //msgp:sort period SortPeriod PeriodLess
 type SortPeriod []period
@@ -53,9 +56,11 @@ func (a SortPeriod) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func PeriodLess(a, b period) bool       { return a < b }
 
 // SortRound defines SortInterface used by msgp to consistently sort maps with this type as key.
+// note, for type aliases the base type is used for the interface
+//
 //msgp:ignore SortRound
-//msgp:sort round SortRound RoundLess
-type SortRound []round
+//msgp:sort basics.Round SortRound basics.RoundLess
+type SortRound []basics.Round
 
 func (a SortRound) Len() int           { return len(a) }
 func (a SortRound) Less(i, j int) bool { return a[i] < a[j] }
@@ -63,6 +68,7 @@ func (a SortRound) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func RoundLess(a, b round) bool        { return a < b }
 
 // SortProposalValue defines SortInterface used by msgp to consistently sort maps with this type as key.
+//
 //msgp:ignore SortProposalValue
 //msgp:sort proposalValue SortProposalValue ProposalValueLess
 type SortProposalValue []proposalValue
