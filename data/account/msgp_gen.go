@@ -107,7 +107,11 @@ func (z *ParticipationKeyIdentity) UnmarshalMsg(bts []byte) (o []byte, err error
 	var field []byte
 	_ = field
 	var zb0001 int
+	var zb0003 string
+	var zb0004 bool
 	var zb0002 bool
+	_ = zb0003
+	_ = zb0004
 	zb0001, zb0002, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0001, zb0002, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -115,6 +119,7 @@ func (z *ParticipationKeyIdentity) UnmarshalMsg(bts []byte) (o []byte, err error
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0001 > 0 {
 			zb0001--
 			bts, err = (*z).Parent.UnmarshalMsg(bts)
@@ -187,41 +192,71 @@ func (z *ParticipationKeyIdentity) UnmarshalMsg(bts []byte) (o []byte, err error
 			}
 			switch string(field) {
 			case "addr":
+				if zb0004 && zb0003 > "addr" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Parent.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Parent")
 					return
 				}
+				zb0003 = "addr"
 			case "vrfsk":
+				if zb0004 && zb0003 > "vrfsk" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).VRFSK.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "VRFSK")
 					return
 				}
+				zb0003 = "vrfsk"
 			case "vote-id":
+				if zb0004 && zb0003 > "vote-id" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).VoteID.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "VoteID")
 					return
 				}
+				zb0003 = "vote-id"
 			case "fv":
+				if zb0004 && zb0003 > "fv" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).FirstValid.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "FirstValid")
 					return
 				}
+				zb0003 = "fv"
 			case "lv":
+				if zb0004 && zb0003 > "lv" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).LastValid.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "LastValid")
 					return
 				}
+				zb0003 = "lv"
 			case "kd":
+				if zb0004 && zb0003 > "kd" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).KeyDilution, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "KeyDilution")
 					return
 				}
+				zb0003 = "kd"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -229,6 +264,7 @@ func (z *ParticipationKeyIdentity) UnmarshalMsg(bts []byte) (o []byte, err error
 					return
 				}
 			}
+			zb0004 = true
 		}
 	}
 	o = bts

@@ -300,7 +300,11 @@ func (z *BaseAccountData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0001 int
+	var zb0003 string
+	var zb0004 bool
 	var zb0002 bool
+	_ = zb0003
+	_ = zb0004
 	zb0001, zb0002, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0001, zb0002, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -308,6 +312,7 @@ func (z *BaseAccountData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0001 > 0 {
 			zb0001--
 			bts, err = (*z).Status.UnmarshalMsg(bts)
@@ -500,131 +505,236 @@ func (z *BaseAccountData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "a":
+				if zb0004 && zb0003 > "a" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Status.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Status")
 					return
 				}
+				zb0003 = "a"
 			case "b":
+				if zb0004 && zb0003 > "b" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).MicroAlgos.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "MicroAlgos")
 					return
 				}
+				zb0003 = "b"
 			case "c":
+				if zb0004 && zb0003 > "c" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).RewardsBase, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "RewardsBase")
 					return
 				}
+				zb0003 = "c"
 			case "d":
+				if zb0004 && zb0003 > "d" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).RewardedMicroAlgos.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "RewardedMicroAlgos")
 					return
 				}
+				zb0003 = "d"
 			case "e":
+				if zb0004 && zb0003 > "e" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).AuthAddr.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "AuthAddr")
 					return
 				}
+				zb0003 = "e"
 			case "f":
+				if zb0004 && zb0003 > "f" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).TotalAppSchemaNumUint, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "TotalAppSchemaNumUint")
 					return
 				}
+				zb0003 = "f"
 			case "g":
+				if zb0004 && zb0003 > "g" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).TotalAppSchemaNumByteSlice, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "TotalAppSchemaNumByteSlice")
 					return
 				}
+				zb0003 = "g"
 			case "h":
+				if zb0004 && zb0003 > "h" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).TotalExtraAppPages, bts, err = msgp.ReadUint32Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "TotalExtraAppPages")
 					return
 				}
+				zb0003 = "h"
 			case "i":
+				if zb0004 && zb0003 > "i" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).TotalAssetParams, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "TotalAssetParams")
 					return
 				}
+				zb0003 = "i"
 			case "j":
+				if zb0004 && zb0003 > "j" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).TotalAssets, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "TotalAssets")
 					return
 				}
+				zb0003 = "j"
 			case "k":
+				if zb0004 && zb0003 > "k" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).TotalAppParams, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "TotalAppParams")
 					return
 				}
+				zb0003 = "k"
 			case "l":
+				if zb0004 && zb0003 > "l" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).TotalAppLocalStates, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "TotalAppLocalStates")
 					return
 				}
+				zb0003 = "l"
 			case "m":
+				if zb0004 && zb0003 > "m" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).TotalBoxes, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "TotalBoxes")
 					return
 				}
+				zb0003 = "m"
 			case "n":
+				if zb0004 && zb0003 > "n" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).TotalBoxBytes, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "TotalBoxBytes")
 					return
 				}
+				zb0003 = "n"
 			case "A":
+				if zb0004 && zb0003 > "A" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).BaseVotingData.VoteID.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "VoteID")
 					return
 				}
+				zb0003 = "A"
 			case "B":
+				if zb0004 && zb0003 > "B" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).BaseVotingData.SelectionID.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "SelectionID")
 					return
 				}
+				zb0003 = "B"
 			case "C":
+				if zb0004 && zb0003 > "C" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).BaseVotingData.VoteFirstValid.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "VoteFirstValid")
 					return
 				}
+				zb0003 = "C"
 			case "D":
+				if zb0004 && zb0003 > "D" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).BaseVotingData.VoteLastValid.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "VoteLastValid")
 					return
 				}
+				zb0003 = "D"
 			case "E":
+				if zb0004 && zb0003 > "E" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).BaseVotingData.VoteKeyDilution, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "VoteKeyDilution")
 					return
 				}
+				zb0003 = "E"
 			case "F":
+				if zb0004 && zb0003 > "F" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).BaseVotingData.StateProofID.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "StateProofID")
 					return
 				}
+				zb0003 = "F"
 			case "z":
+				if zb0004 && zb0003 > "z" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).UpdateRound, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "UpdateRound")
 					return
 				}
+				zb0003 = "z"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -632,6 +742,7 @@ func (z *BaseAccountData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0004 = true
 		}
 	}
 	o = bts
@@ -755,7 +866,11 @@ func (z *BaseOnlineAccountData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0001 int
+	var zb0003 string
+	var zb0004 bool
 	var zb0002 bool
+	_ = zb0003
+	_ = zb0004
 	zb0001, zb0002, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0001, zb0002, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -763,6 +878,7 @@ func (z *BaseOnlineAccountData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0001 > 0 {
 			zb0001--
 			bts, err = (*z).BaseVotingData.VoteID.UnmarshalMsg(bts)
@@ -851,53 +967,93 @@ func (z *BaseOnlineAccountData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "A":
+				if zb0004 && zb0003 > "A" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).BaseVotingData.VoteID.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "VoteID")
 					return
 				}
+				zb0003 = "A"
 			case "B":
+				if zb0004 && zb0003 > "B" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).BaseVotingData.SelectionID.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "SelectionID")
 					return
 				}
+				zb0003 = "B"
 			case "C":
+				if zb0004 && zb0003 > "C" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).BaseVotingData.VoteFirstValid.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "VoteFirstValid")
 					return
 				}
+				zb0003 = "C"
 			case "D":
+				if zb0004 && zb0003 > "D" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).BaseVotingData.VoteLastValid.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "VoteLastValid")
 					return
 				}
+				zb0003 = "D"
 			case "E":
+				if zb0004 && zb0003 > "E" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).BaseVotingData.VoteKeyDilution, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "VoteKeyDilution")
 					return
 				}
+				zb0003 = "E"
 			case "F":
+				if zb0004 && zb0003 > "F" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).BaseVotingData.StateProofID.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "StateProofID")
 					return
 				}
+				zb0003 = "F"
 			case "Y":
+				if zb0004 && zb0003 > "Y" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).MicroAlgos.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "MicroAlgos")
 					return
 				}
+				zb0003 = "Y"
 			case "Z":
+				if zb0004 && zb0003 > "Z" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).RewardsBase, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "RewardsBase")
 					return
 				}
+				zb0003 = "Z"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -905,6 +1061,7 @@ func (z *BaseOnlineAccountData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0004 = true
 		}
 	}
 	o = bts
@@ -1010,7 +1167,11 @@ func (z *BaseVotingData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0001 int
+	var zb0003 string
+	var zb0004 bool
 	var zb0002 bool
+	_ = zb0003
+	_ = zb0004
 	zb0001, zb0002, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0001, zb0002, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -1018,6 +1179,7 @@ func (z *BaseVotingData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0001 > 0 {
 			zb0001--
 			bts, err = (*z).VoteID.UnmarshalMsg(bts)
@@ -1090,41 +1252,71 @@ func (z *BaseVotingData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "A":
+				if zb0004 && zb0003 > "A" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).VoteID.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "VoteID")
 					return
 				}
+				zb0003 = "A"
 			case "B":
+				if zb0004 && zb0003 > "B" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).SelectionID.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "SelectionID")
 					return
 				}
+				zb0003 = "B"
 			case "C":
+				if zb0004 && zb0003 > "C" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).VoteFirstValid.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "VoteFirstValid")
 					return
 				}
+				zb0003 = "C"
 			case "D":
+				if zb0004 && zb0003 > "D" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).VoteLastValid.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "VoteLastValid")
 					return
 				}
+				zb0003 = "D"
 			case "E":
+				if zb0004 && zb0003 > "E" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).VoteKeyDilution, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "VoteKeyDilution")
 					return
 				}
+				zb0003 = "E"
 			case "F":
+				if zb0004 && zb0003 > "F" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).StateProofID.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "StateProofID")
 					return
 				}
+				zb0003 = "F"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -1132,6 +1324,7 @@ func (z *BaseVotingData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0004 = true
 		}
 	}
 	o = bts
@@ -1246,7 +1439,11 @@ func (z *CatchpointFirstStageInfo) UnmarshalMsg(bts []byte) (o []byte, err error
 	var field []byte
 	_ = field
 	var zb0001 int
+	var zb0003 string
+	var zb0004 bool
 	var zb0002 bool
+	_ = zb0003
+	_ = zb0004
 	zb0001, zb0002, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0001, zb0002, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -1254,6 +1451,7 @@ func (z *CatchpointFirstStageInfo) UnmarshalMsg(bts []byte) (o []byte, err error
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0001 > 0 {
 			zb0001--
 			bts, err = (*z).Totals.UnmarshalMsg(bts)
@@ -1334,47 +1532,82 @@ func (z *CatchpointFirstStageInfo) UnmarshalMsg(bts []byte) (o []byte, err error
 			}
 			switch string(field) {
 			case "accountTotals":
+				if zb0004 && zb0003 > "accountTotals" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Totals.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Totals")
 					return
 				}
+				zb0003 = "accountTotals"
 			case "trieBalancesHash":
+				if zb0004 && zb0003 > "trieBalancesHash" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).TrieBalancesHash.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "TrieBalancesHash")
 					return
 				}
+				zb0003 = "trieBalancesHash"
 			case "accountsCount":
+				if zb0004 && zb0003 > "accountsCount" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).TotalAccounts, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "TotalAccounts")
 					return
 				}
+				zb0003 = "accountsCount"
 			case "kvsCount":
+				if zb0004 && zb0003 > "kvsCount" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).TotalKVs, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "TotalKVs")
 					return
 				}
+				zb0003 = "kvsCount"
 			case "chunksCount":
+				if zb0004 && zb0003 > "chunksCount" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).TotalChunks, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "TotalChunks")
 					return
 				}
+				zb0003 = "chunksCount"
 			case "biggestChunk":
+				if zb0004 && zb0003 > "biggestChunk" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).BiggestChunkLen, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "BiggestChunkLen")
 					return
 				}
+				zb0003 = "biggestChunk"
 			case "spVerificationHash":
+				if zb0004 && zb0003 > "spVerificationHash" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).StateProofVerificationHash.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "StateProofVerificationHash")
 					return
 				}
+				zb0003 = "spVerificationHash"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -1382,6 +1615,7 @@ func (z *CatchpointFirstStageInfo) UnmarshalMsg(bts []byte) (o []byte, err error
 					return
 				}
 			}
+			zb0004 = true
 		}
 	}
 	o = bts
@@ -1719,7 +1953,11 @@ func (z *ResourcesData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0002 int
+	var zb0004 string
+	var zb0005 bool
 	var zb0003 bool
+	_ = zb0004
+	_ = zb0005
 	zb0002, zb0003, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0002, zb0003, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -1727,6 +1965,7 @@ func (z *ResourcesData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0002 > 0 {
 			zb0002--
 			(*z).Total, bts, err = msgp.ReadUint64Bytes(bts)
@@ -1857,14 +2096,14 @@ func (z *ResourcesData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		}
 		if zb0002 > 0 {
 			zb0002--
-			var zb0004 int
-			zb0004, err = msgp.ReadBytesBytesHeader(bts)
+			var zb0006 int
+			zb0006, err = msgp.ReadBytesBytesHeader(bts)
 			if err != nil {
 				err = msgp.WrapError(err, "struct-from-array", "ApprovalProgram")
 				return
 			}
-			if zb0004 > config.MaxAvailableAppProgramLen {
-				err = msgp.ErrOverflow(uint64(zb0004), uint64(config.MaxAvailableAppProgramLen))
+			if zb0006 > config.MaxAvailableAppProgramLen {
+				err = msgp.ErrOverflow(uint64(zb0006), uint64(config.MaxAvailableAppProgramLen))
 				return
 			}
 			(*z).ApprovalProgram, bts, err = msgp.ReadBytesBytes(bts, (*z).ApprovalProgram)
@@ -1875,14 +2114,14 @@ func (z *ResourcesData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		}
 		if zb0002 > 0 {
 			zb0002--
-			var zb0005 int
-			zb0005, err = msgp.ReadBytesBytesHeader(bts)
+			var zb0007 int
+			zb0007, err = msgp.ReadBytesBytesHeader(bts)
 			if err != nil {
 				err = msgp.WrapError(err, "struct-from-array", "ClearStateProgram")
 				return
 			}
-			if zb0005 > config.MaxAvailableAppProgramLen {
-				err = msgp.ErrOverflow(uint64(zb0005), uint64(config.MaxAvailableAppProgramLen))
+			if zb0007 > config.MaxAvailableAppProgramLen {
+				err = msgp.ErrOverflow(uint64(zb0007), uint64(config.MaxAvailableAppProgramLen))
 				return
 			}
 			(*z).ClearStateProgram, bts, err = msgp.ReadBytesBytes(bts, (*z).ClearStateProgram)
@@ -1942,13 +2181,13 @@ func (z *ResourcesData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		if zb0002 > 0 {
 			zb0002--
 			{
-				var zb0006 uint8
-				zb0006, bts, err = msgp.ReadUint8Bytes(bts)
+				var zb0008 uint8
+				zb0008, bts, err = msgp.ReadUint8Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "ResourceFlags")
 					return
 				}
-				(*z).ResourceFlags = ResourceFlags(zb0006)
+				(*z).ResourceFlags = ResourceFlags(zb0008)
 			}
 		}
 		if zb0002 > 0 {
@@ -1983,110 +2222,194 @@ func (z *ResourcesData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "a":
+				if zb0005 && zb0004 > "a" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).Total, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Total")
 					return
 				}
+				zb0004 = "a"
 			case "b":
+				if zb0005 && zb0004 > "b" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).Decimals, bts, err = msgp.ReadUint32Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Decimals")
 					return
 				}
+				zb0004 = "b"
 			case "c":
+				if zb0005 && zb0004 > "c" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).DefaultFrozen, bts, err = msgp.ReadBoolBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "DefaultFrozen")
 					return
 				}
+				zb0004 = "c"
 			case "d":
+				if zb0005 && zb0004 > "d" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).UnitName, bts, err = msgp.ReadStringBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "UnitName")
 					return
 				}
+				zb0004 = "d"
 			case "e":
+				if zb0005 && zb0004 > "e" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).AssetName, bts, err = msgp.ReadStringBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "AssetName")
 					return
 				}
+				zb0004 = "e"
 			case "f":
+				if zb0005 && zb0004 > "f" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).URL, bts, err = msgp.ReadStringBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "URL")
 					return
 				}
+				zb0004 = "f"
 			case "g":
+				if zb0005 && zb0004 > "g" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = msgp.ReadExactBytes(bts, ((*z).MetadataHash)[:])
 				if err != nil {
 					err = msgp.WrapError(err, "MetadataHash")
 					return
 				}
+				zb0004 = "g"
 			case "h":
+				if zb0005 && zb0004 > "h" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Manager.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Manager")
 					return
 				}
+				zb0004 = "h"
 			case "i":
+				if zb0005 && zb0004 > "i" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Reserve.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Reserve")
 					return
 				}
+				zb0004 = "i"
 			case "j":
+				if zb0005 && zb0004 > "j" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Freeze.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Freeze")
 					return
 				}
+				zb0004 = "j"
 			case "k":
+				if zb0005 && zb0004 > "k" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Clawback.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Clawback")
 					return
 				}
+				zb0004 = "k"
 			case "l":
+				if zb0005 && zb0004 > "l" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).Amount, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Amount")
 					return
 				}
+				zb0004 = "l"
 			case "m":
+				if zb0005 && zb0004 > "m" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).Frozen, bts, err = msgp.ReadBoolBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Frozen")
 					return
 				}
+				zb0004 = "m"
 			case "n":
+				if zb0005 && zb0004 > "n" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).SchemaNumUint, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "SchemaNumUint")
 					return
 				}
+				zb0004 = "n"
 			case "o":
+				if zb0005 && zb0004 > "o" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).SchemaNumByteSlice, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "SchemaNumByteSlice")
 					return
 				}
+				zb0004 = "o"
 			case "p":
+				if zb0005 && zb0004 > "p" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).KeyValue.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "KeyValue")
 					return
 				}
+				zb0004 = "p"
 			case "q":
-				var zb0007 int
-				zb0007, err = msgp.ReadBytesBytesHeader(bts)
+				if zb0005 && zb0004 > "q" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				var zb0009 int
+				zb0009, err = msgp.ReadBytesBytesHeader(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "ApprovalProgram")
 					return
 				}
-				if zb0007 > config.MaxAvailableAppProgramLen {
-					err = msgp.ErrOverflow(uint64(zb0007), uint64(config.MaxAvailableAppProgramLen))
+				if zb0009 > config.MaxAvailableAppProgramLen {
+					err = msgp.ErrOverflow(uint64(zb0009), uint64(config.MaxAvailableAppProgramLen))
 					return
 				}
 				(*z).ApprovalProgram, bts, err = msgp.ReadBytesBytes(bts, (*z).ApprovalProgram)
@@ -2094,15 +2417,20 @@ func (z *ResourcesData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					err = msgp.WrapError(err, "ApprovalProgram")
 					return
 				}
+				zb0004 = "q"
 			case "r":
-				var zb0008 int
-				zb0008, err = msgp.ReadBytesBytesHeader(bts)
+				if zb0005 && zb0004 > "r" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				var zb0010 int
+				zb0010, err = msgp.ReadBytesBytesHeader(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "ClearStateProgram")
 					return
 				}
-				if zb0008 > config.MaxAvailableAppProgramLen {
-					err = msgp.ErrOverflow(uint64(zb0008), uint64(config.MaxAvailableAppProgramLen))
+				if zb0010 > config.MaxAvailableAppProgramLen {
+					err = msgp.ErrOverflow(uint64(zb0010), uint64(config.MaxAvailableAppProgramLen))
 					return
 				}
 				(*z).ClearStateProgram, bts, err = msgp.ReadBytesBytes(bts, (*z).ClearStateProgram)
@@ -2110,58 +2438,99 @@ func (z *ResourcesData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					err = msgp.WrapError(err, "ClearStateProgram")
 					return
 				}
+				zb0004 = "r"
 			case "s":
+				if zb0005 && zb0004 > "s" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).GlobalState.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "GlobalState")
 					return
 				}
+				zb0004 = "s"
 			case "t":
+				if zb0005 && zb0004 > "t" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).LocalStateSchemaNumUint, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "LocalStateSchemaNumUint")
 					return
 				}
+				zb0004 = "t"
 			case "u":
+				if zb0005 && zb0004 > "u" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).LocalStateSchemaNumByteSlice, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "LocalStateSchemaNumByteSlice")
 					return
 				}
+				zb0004 = "u"
 			case "v":
+				if zb0005 && zb0004 > "v" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).GlobalStateSchemaNumUint, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "GlobalStateSchemaNumUint")
 					return
 				}
+				zb0004 = "v"
 			case "w":
+				if zb0005 && zb0004 > "w" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).GlobalStateSchemaNumByteSlice, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "GlobalStateSchemaNumByteSlice")
 					return
 				}
+				zb0004 = "w"
 			case "x":
+				if zb0005 && zb0004 > "x" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).ExtraProgramPages, bts, err = msgp.ReadUint32Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "ExtraProgramPages")
 					return
 				}
+				zb0004 = "x"
 			case "y":
+				if zb0005 && zb0004 > "y" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				{
-					var zb0009 uint8
-					zb0009, bts, err = msgp.ReadUint8Bytes(bts)
+					var zb0011 uint8
+					zb0011, bts, err = msgp.ReadUint8Bytes(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "ResourceFlags")
 						return
 					}
-					(*z).ResourceFlags = ResourceFlags(zb0009)
+					(*z).ResourceFlags = ResourceFlags(zb0011)
 				}
+				zb0004 = "y"
 			case "z":
+				if zb0005 && zb0004 > "z" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).UpdateRound, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "UpdateRound")
 					return
 				}
+				zb0004 = "z"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -2169,6 +2538,7 @@ func (z *ResourcesData) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0005 = true
 		}
 	}
 	o = bts
@@ -2286,7 +2656,11 @@ func (z *TxTailRound) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0004 int
+	var zb0006 string
+	var zb0007 bool
 	var zb0005 bool
+	_ = zb0006
+	_ = zb0007
 	zb0004, zb0005, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0004, zb0005, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -2294,21 +2668,22 @@ func (z *TxTailRound) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0004 > 0 {
 			zb0004--
-			var zb0006 int
-			var zb0007 bool
-			zb0006, zb0007, bts, err = msgp.ReadArrayHeaderBytes(bts)
+			var zb0008 int
+			var zb0009 bool
+			zb0008, zb0009, bts, err = msgp.ReadArrayHeaderBytes(bts)
 			if err != nil {
 				err = msgp.WrapError(err, "struct-from-array", "TxnIDs")
 				return
 			}
-			if zb0007 {
+			if zb0009 {
 				(*z).TxnIDs = nil
-			} else if (*z).TxnIDs != nil && cap((*z).TxnIDs) >= zb0006 {
-				(*z).TxnIDs = ((*z).TxnIDs)[:zb0006]
+			} else if (*z).TxnIDs != nil && cap((*z).TxnIDs) >= zb0008 {
+				(*z).TxnIDs = ((*z).TxnIDs)[:zb0008]
 			} else {
-				(*z).TxnIDs = make([]transactions.Txid, zb0006)
+				(*z).TxnIDs = make([]transactions.Txid, zb0008)
 			}
 			for zb0001 := range (*z).TxnIDs {
 				bts, err = (*z).TxnIDs[zb0001].UnmarshalMsg(bts)
@@ -2320,19 +2695,19 @@ func (z *TxTailRound) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		}
 		if zb0004 > 0 {
 			zb0004--
-			var zb0008 int
-			var zb0009 bool
-			zb0008, zb0009, bts, err = msgp.ReadArrayHeaderBytes(bts)
+			var zb0010 int
+			var zb0011 bool
+			zb0010, zb0011, bts, err = msgp.ReadArrayHeaderBytes(bts)
 			if err != nil {
 				err = msgp.WrapError(err, "struct-from-array", "LastValid")
 				return
 			}
-			if zb0009 {
+			if zb0011 {
 				(*z).LastValid = nil
-			} else if (*z).LastValid != nil && cap((*z).LastValid) >= zb0008 {
-				(*z).LastValid = ((*z).LastValid)[:zb0008]
+			} else if (*z).LastValid != nil && cap((*z).LastValid) >= zb0010 {
+				(*z).LastValid = ((*z).LastValid)[:zb0010]
 			} else {
-				(*z).LastValid = make([]basics.Round, zb0008)
+				(*z).LastValid = make([]basics.Round, zb0010)
 			}
 			for zb0002 := range (*z).LastValid {
 				bts, err = (*z).LastValid[zb0002].UnmarshalMsg(bts)
@@ -2344,19 +2719,19 @@ func (z *TxTailRound) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		}
 		if zb0004 > 0 {
 			zb0004--
-			var zb0010 int
-			var zb0011 bool
-			zb0010, zb0011, bts, err = msgp.ReadArrayHeaderBytes(bts)
+			var zb0012 int
+			var zb0013 bool
+			zb0012, zb0013, bts, err = msgp.ReadArrayHeaderBytes(bts)
 			if err != nil {
 				err = msgp.WrapError(err, "struct-from-array", "Leases")
 				return
 			}
-			if zb0011 {
+			if zb0013 {
 				(*z).Leases = nil
-			} else if (*z).Leases != nil && cap((*z).Leases) >= zb0010 {
-				(*z).Leases = ((*z).Leases)[:zb0010]
+			} else if (*z).Leases != nil && cap((*z).Leases) >= zb0012 {
+				(*z).Leases = ((*z).Leases)[:zb0012]
 			} else {
-				(*z).Leases = make([]TxTailRoundLease, zb0010)
+				(*z).Leases = make([]TxTailRoundLease, zb0012)
 			}
 			for zb0003 := range (*z).Leases {
 				bts, err = (*z).Leases[zb0003].UnmarshalMsg(bts)
@@ -2398,19 +2773,23 @@ func (z *TxTailRound) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "i":
-				var zb0012 int
-				var zb0013 bool
-				zb0012, zb0013, bts, err = msgp.ReadArrayHeaderBytes(bts)
+				if zb0007 && zb0006 > "i" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				var zb0014 int
+				var zb0015 bool
+				zb0014, zb0015, bts, err = msgp.ReadArrayHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "TxnIDs")
 					return
 				}
-				if zb0013 {
+				if zb0015 {
 					(*z).TxnIDs = nil
-				} else if (*z).TxnIDs != nil && cap((*z).TxnIDs) >= zb0012 {
-					(*z).TxnIDs = ((*z).TxnIDs)[:zb0012]
+				} else if (*z).TxnIDs != nil && cap((*z).TxnIDs) >= zb0014 {
+					(*z).TxnIDs = ((*z).TxnIDs)[:zb0014]
 				} else {
-					(*z).TxnIDs = make([]transactions.Txid, zb0012)
+					(*z).TxnIDs = make([]transactions.Txid, zb0014)
 				}
 				for zb0001 := range (*z).TxnIDs {
 					bts, err = (*z).TxnIDs[zb0001].UnmarshalMsg(bts)
@@ -2419,20 +2798,25 @@ func (z *TxTailRound) UnmarshalMsg(bts []byte) (o []byte, err error) {
 						return
 					}
 				}
+				zb0006 = "i"
 			case "v":
-				var zb0014 int
-				var zb0015 bool
-				zb0014, zb0015, bts, err = msgp.ReadArrayHeaderBytes(bts)
+				if zb0007 && zb0006 > "v" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				var zb0016 int
+				var zb0017 bool
+				zb0016, zb0017, bts, err = msgp.ReadArrayHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "LastValid")
 					return
 				}
-				if zb0015 {
+				if zb0017 {
 					(*z).LastValid = nil
-				} else if (*z).LastValid != nil && cap((*z).LastValid) >= zb0014 {
-					(*z).LastValid = ((*z).LastValid)[:zb0014]
+				} else if (*z).LastValid != nil && cap((*z).LastValid) >= zb0016 {
+					(*z).LastValid = ((*z).LastValid)[:zb0016]
 				} else {
-					(*z).LastValid = make([]basics.Round, zb0014)
+					(*z).LastValid = make([]basics.Round, zb0016)
 				}
 				for zb0002 := range (*z).LastValid {
 					bts, err = (*z).LastValid[zb0002].UnmarshalMsg(bts)
@@ -2441,20 +2825,25 @@ func (z *TxTailRound) UnmarshalMsg(bts []byte) (o []byte, err error) {
 						return
 					}
 				}
+				zb0006 = "v"
 			case "l":
-				var zb0016 int
-				var zb0017 bool
-				zb0016, zb0017, bts, err = msgp.ReadArrayHeaderBytes(bts)
+				if zb0007 && zb0006 > "l" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				var zb0018 int
+				var zb0019 bool
+				zb0018, zb0019, bts, err = msgp.ReadArrayHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Leases")
 					return
 				}
-				if zb0017 {
+				if zb0019 {
 					(*z).Leases = nil
-				} else if (*z).Leases != nil && cap((*z).Leases) >= zb0016 {
-					(*z).Leases = ((*z).Leases)[:zb0016]
+				} else if (*z).Leases != nil && cap((*z).Leases) >= zb0018 {
+					(*z).Leases = ((*z).Leases)[:zb0018]
 				} else {
-					(*z).Leases = make([]TxTailRoundLease, zb0016)
+					(*z).Leases = make([]TxTailRoundLease, zb0018)
 				}
 				for zb0003 := range (*z).Leases {
 					bts, err = (*z).Leases[zb0003].UnmarshalMsg(bts)
@@ -2463,12 +2852,18 @@ func (z *TxTailRound) UnmarshalMsg(bts []byte) (o []byte, err error) {
 						return
 					}
 				}
+				zb0006 = "l"
 			case "h":
+				if zb0007 && zb0006 > "h" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Hdr.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Hdr")
 					return
 				}
+				zb0006 = "h"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -2476,6 +2871,7 @@ func (z *TxTailRound) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0007 = true
 		}
 	}
 	o = bts
@@ -2575,7 +2971,11 @@ func (z *TxTailRoundLease) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0002 int
+	var zb0004 string
+	var zb0005 bool
 	var zb0003 bool
+	_ = zb0004
+	_ = zb0005
 	zb0002, zb0003, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0002, zb0003, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -2583,6 +2983,7 @@ func (z *TxTailRoundLease) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0002 > 0 {
 			zb0002--
 			bts, err = (*z).Sender.UnmarshalMsg(bts)
@@ -2631,23 +3032,38 @@ func (z *TxTailRoundLease) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "s":
+				if zb0005 && zb0004 > "s" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Sender.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Sender")
 					return
 				}
+				zb0004 = "s"
 			case "l":
+				if zb0005 && zb0004 > "l" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = msgp.ReadExactBytes(bts, ((*z).Lease)[:])
 				if err != nil {
 					err = msgp.WrapError(err, "Lease")
 					return
 				}
+				zb0004 = "l"
 			case "TxnIdx":
+				if zb0005 && zb0004 > "TxnIdx" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).TxnIdx, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "TxnIdx")
 					return
 				}
+				zb0004 = "TxnIdx"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -2655,6 +3071,7 @@ func (z *TxTailRoundLease) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0005 = true
 		}
 	}
 	o = bts

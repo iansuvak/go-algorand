@@ -214,7 +214,11 @@ func (z *CatchpointFileHeader) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0001 int
+	var zb0003 string
+	var zb0004 bool
 	var zb0002 bool
+	_ = zb0003
+	_ = zb0004
 	zb0001, zb0002, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0001, zb0002, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -222,6 +226,7 @@ func (z *CatchpointFileHeader) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0001 > 0 {
 			zb0001--
 			(*z).Version, bts, err = msgp.ReadUint64Bytes(bts)
@@ -318,59 +323,104 @@ func (z *CatchpointFileHeader) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "version":
+				if zb0004 && zb0003 > "version" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).Version, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Version")
 					return
 				}
+				zb0003 = "version"
 			case "balancesRound":
+				if zb0004 && zb0003 > "balancesRound" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).BalancesRound.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "BalancesRound")
 					return
 				}
+				zb0003 = "balancesRound"
 			case "blocksRound":
+				if zb0004 && zb0003 > "blocksRound" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).BlocksRound.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "BlocksRound")
 					return
 				}
+				zb0003 = "blocksRound"
 			case "accountTotals":
+				if zb0004 && zb0003 > "accountTotals" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Totals.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Totals")
 					return
 				}
+				zb0003 = "accountTotals"
 			case "accountsCount":
+				if zb0004 && zb0003 > "accountsCount" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).TotalAccounts, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "TotalAccounts")
 					return
 				}
+				zb0003 = "accountsCount"
 			case "chunksCount":
+				if zb0004 && zb0003 > "chunksCount" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).TotalChunks, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "TotalChunks")
 					return
 				}
+				zb0003 = "chunksCount"
 			case "kvsCount":
+				if zb0004 && zb0003 > "kvsCount" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).TotalKVs, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "TotalKVs")
 					return
 				}
+				zb0003 = "kvsCount"
 			case "catchpoint":
+				if zb0004 && zb0003 > "catchpoint" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).Catchpoint, bts, err = msgp.ReadStringBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Catchpoint")
 					return
 				}
+				zb0003 = "catchpoint"
 			case "blockHeaderDigest":
+				if zb0004 && zb0003 > "blockHeaderDigest" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).BlockHeaderDigest.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "BlockHeaderDigest")
 					return
 				}
+				zb0003 = "blockHeaderDigest"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -378,6 +428,7 @@ func (z *CatchpointFileHeader) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0004 = true
 		}
 	}
 	o = bts
@@ -447,7 +498,11 @@ func (z *catchpointFileBalancesChunkV5) UnmarshalMsg(bts []byte) (o []byte, err 
 	var field []byte
 	_ = field
 	var zb0002 int
+	var zb0004 string
+	var zb0005 bool
 	var zb0003 bool
+	_ = zb0004
+	_ = zb0005
 	zb0002, zb0003, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0002, zb0003, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -455,26 +510,27 @@ func (z *catchpointFileBalancesChunkV5) UnmarshalMsg(bts []byte) (o []byte, err 
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0002 > 0 {
 			zb0002--
-			var zb0004 int
-			var zb0005 bool
-			zb0004, zb0005, bts, err = msgp.ReadArrayHeaderBytes(bts)
+			var zb0006 int
+			var zb0007 bool
+			zb0006, zb0007, bts, err = msgp.ReadArrayHeaderBytes(bts)
 			if err != nil {
 				err = msgp.WrapError(err, "struct-from-array", "Balances")
 				return
 			}
-			if zb0004 > BalancesPerCatchpointFileChunk {
-				err = msgp.ErrOverflow(uint64(zb0004), uint64(BalancesPerCatchpointFileChunk))
+			if zb0006 > BalancesPerCatchpointFileChunk {
+				err = msgp.ErrOverflow(uint64(zb0006), uint64(BalancesPerCatchpointFileChunk))
 				err = msgp.WrapError(err, "struct-from-array", "Balances")
 				return
 			}
-			if zb0005 {
+			if zb0007 {
 				(*z).Balances = nil
-			} else if (*z).Balances != nil && cap((*z).Balances) >= zb0004 {
-				(*z).Balances = ((*z).Balances)[:zb0004]
+			} else if (*z).Balances != nil && cap((*z).Balances) >= zb0006 {
+				(*z).Balances = ((*z).Balances)[:zb0006]
 			} else {
-				(*z).Balances = make([]encoded.BalanceRecordV5, zb0004)
+				(*z).Balances = make([]encoded.BalanceRecordV5, zb0006)
 			}
 			for zb0001 := range (*z).Balances {
 				bts, err = (*z).Balances[zb0001].UnmarshalMsg(bts)
@@ -508,24 +564,28 @@ func (z *catchpointFileBalancesChunkV5) UnmarshalMsg(bts []byte) (o []byte, err 
 			}
 			switch string(field) {
 			case "bl":
-				var zb0006 int
-				var zb0007 bool
-				zb0006, zb0007, bts, err = msgp.ReadArrayHeaderBytes(bts)
+				if zb0005 && zb0004 > "bl" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				var zb0008 int
+				var zb0009 bool
+				zb0008, zb0009, bts, err = msgp.ReadArrayHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Balances")
 					return
 				}
-				if zb0006 > BalancesPerCatchpointFileChunk {
-					err = msgp.ErrOverflow(uint64(zb0006), uint64(BalancesPerCatchpointFileChunk))
+				if zb0008 > BalancesPerCatchpointFileChunk {
+					err = msgp.ErrOverflow(uint64(zb0008), uint64(BalancesPerCatchpointFileChunk))
 					err = msgp.WrapError(err, "Balances")
 					return
 				}
-				if zb0007 {
+				if zb0009 {
 					(*z).Balances = nil
-				} else if (*z).Balances != nil && cap((*z).Balances) >= zb0006 {
-					(*z).Balances = ((*z).Balances)[:zb0006]
+				} else if (*z).Balances != nil && cap((*z).Balances) >= zb0008 {
+					(*z).Balances = ((*z).Balances)[:zb0008]
 				} else {
-					(*z).Balances = make([]encoded.BalanceRecordV5, zb0006)
+					(*z).Balances = make([]encoded.BalanceRecordV5, zb0008)
 				}
 				for zb0001 := range (*z).Balances {
 					bts, err = (*z).Balances[zb0001].UnmarshalMsg(bts)
@@ -534,6 +594,7 @@ func (z *catchpointFileBalancesChunkV5) UnmarshalMsg(bts []byte) (o []byte, err 
 						return
 					}
 				}
+				zb0004 = "bl"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -541,6 +602,7 @@ func (z *catchpointFileBalancesChunkV5) UnmarshalMsg(bts []byte) (o []byte, err 
 					return
 				}
 			}
+			zb0005 = true
 		}
 	}
 	o = bts
@@ -629,7 +691,11 @@ func (z *catchpointFileChunkV6) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0003 int
+	var zb0005 string
+	var zb0006 bool
 	var zb0004 bool
+	_ = zb0005
+	_ = zb0006
 	zb0003, zb0004, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0003, zb0004, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -637,26 +703,27 @@ func (z *catchpointFileChunkV6) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0003 > 0 {
 			zb0003--
-			var zb0005 int
-			var zb0006 bool
-			zb0005, zb0006, bts, err = msgp.ReadArrayHeaderBytes(bts)
+			var zb0007 int
+			var zb0008 bool
+			zb0007, zb0008, bts, err = msgp.ReadArrayHeaderBytes(bts)
 			if err != nil {
 				err = msgp.WrapError(err, "struct-from-array", "Balances")
 				return
 			}
-			if zb0005 > BalancesPerCatchpointFileChunk {
-				err = msgp.ErrOverflow(uint64(zb0005), uint64(BalancesPerCatchpointFileChunk))
+			if zb0007 > BalancesPerCatchpointFileChunk {
+				err = msgp.ErrOverflow(uint64(zb0007), uint64(BalancesPerCatchpointFileChunk))
 				err = msgp.WrapError(err, "struct-from-array", "Balances")
 				return
 			}
-			if zb0006 {
+			if zb0008 {
 				(*z).Balances = nil
-			} else if (*z).Balances != nil && cap((*z).Balances) >= zb0005 {
-				(*z).Balances = ((*z).Balances)[:zb0005]
+			} else if (*z).Balances != nil && cap((*z).Balances) >= zb0007 {
+				(*z).Balances = ((*z).Balances)[:zb0007]
 			} else {
-				(*z).Balances = make([]encoded.BalanceRecordV6, zb0005)
+				(*z).Balances = make([]encoded.BalanceRecordV6, zb0007)
 			}
 			for zb0001 := range (*z).Balances {
 				bts, err = (*z).Balances[zb0001].UnmarshalMsg(bts)
@@ -668,24 +735,24 @@ func (z *catchpointFileChunkV6) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		}
 		if zb0003 > 0 {
 			zb0003--
-			var zb0007 int
-			var zb0008 bool
-			zb0007, zb0008, bts, err = msgp.ReadArrayHeaderBytes(bts)
+			var zb0009 int
+			var zb0010 bool
+			zb0009, zb0010, bts, err = msgp.ReadArrayHeaderBytes(bts)
 			if err != nil {
 				err = msgp.WrapError(err, "struct-from-array", "KVs")
 				return
 			}
-			if zb0007 > BalancesPerCatchpointFileChunk {
-				err = msgp.ErrOverflow(uint64(zb0007), uint64(BalancesPerCatchpointFileChunk))
+			if zb0009 > BalancesPerCatchpointFileChunk {
+				err = msgp.ErrOverflow(uint64(zb0009), uint64(BalancesPerCatchpointFileChunk))
 				err = msgp.WrapError(err, "struct-from-array", "KVs")
 				return
 			}
-			if zb0008 {
+			if zb0010 {
 				(*z).KVs = nil
-			} else if (*z).KVs != nil && cap((*z).KVs) >= zb0007 {
-				(*z).KVs = ((*z).KVs)[:zb0007]
+			} else if (*z).KVs != nil && cap((*z).KVs) >= zb0009 {
+				(*z).KVs = ((*z).KVs)[:zb0009]
 			} else {
-				(*z).KVs = make([]encoded.KVRecordV6, zb0007)
+				(*z).KVs = make([]encoded.KVRecordV6, zb0009)
 			}
 			for zb0002 := range (*z).KVs {
 				bts, err = (*z).KVs[zb0002].UnmarshalMsg(bts)
@@ -719,24 +786,28 @@ func (z *catchpointFileChunkV6) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "bl":
-				var zb0009 int
-				var zb0010 bool
-				zb0009, zb0010, bts, err = msgp.ReadArrayHeaderBytes(bts)
+				if zb0006 && zb0005 > "bl" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				var zb0011 int
+				var zb0012 bool
+				zb0011, zb0012, bts, err = msgp.ReadArrayHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Balances")
 					return
 				}
-				if zb0009 > BalancesPerCatchpointFileChunk {
-					err = msgp.ErrOverflow(uint64(zb0009), uint64(BalancesPerCatchpointFileChunk))
+				if zb0011 > BalancesPerCatchpointFileChunk {
+					err = msgp.ErrOverflow(uint64(zb0011), uint64(BalancesPerCatchpointFileChunk))
 					err = msgp.WrapError(err, "Balances")
 					return
 				}
-				if zb0010 {
+				if zb0012 {
 					(*z).Balances = nil
-				} else if (*z).Balances != nil && cap((*z).Balances) >= zb0009 {
-					(*z).Balances = ((*z).Balances)[:zb0009]
+				} else if (*z).Balances != nil && cap((*z).Balances) >= zb0011 {
+					(*z).Balances = ((*z).Balances)[:zb0011]
 				} else {
-					(*z).Balances = make([]encoded.BalanceRecordV6, zb0009)
+					(*z).Balances = make([]encoded.BalanceRecordV6, zb0011)
 				}
 				for zb0001 := range (*z).Balances {
 					bts, err = (*z).Balances[zb0001].UnmarshalMsg(bts)
@@ -745,25 +816,30 @@ func (z *catchpointFileChunkV6) UnmarshalMsg(bts []byte) (o []byte, err error) {
 						return
 					}
 				}
+				zb0005 = "bl"
 			case "kv":
-				var zb0011 int
-				var zb0012 bool
-				zb0011, zb0012, bts, err = msgp.ReadArrayHeaderBytes(bts)
+				if zb0006 && zb0005 > "kv" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				var zb0013 int
+				var zb0014 bool
+				zb0013, zb0014, bts, err = msgp.ReadArrayHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "KVs")
 					return
 				}
-				if zb0011 > BalancesPerCatchpointFileChunk {
-					err = msgp.ErrOverflow(uint64(zb0011), uint64(BalancesPerCatchpointFileChunk))
+				if zb0013 > BalancesPerCatchpointFileChunk {
+					err = msgp.ErrOverflow(uint64(zb0013), uint64(BalancesPerCatchpointFileChunk))
 					err = msgp.WrapError(err, "KVs")
 					return
 				}
-				if zb0012 {
+				if zb0014 {
 					(*z).KVs = nil
-				} else if (*z).KVs != nil && cap((*z).KVs) >= zb0011 {
-					(*z).KVs = ((*z).KVs)[:zb0011]
+				} else if (*z).KVs != nil && cap((*z).KVs) >= zb0013 {
+					(*z).KVs = ((*z).KVs)[:zb0013]
 				} else {
-					(*z).KVs = make([]encoded.KVRecordV6, zb0011)
+					(*z).KVs = make([]encoded.KVRecordV6, zb0013)
 				}
 				for zb0002 := range (*z).KVs {
 					bts, err = (*z).KVs[zb0002].UnmarshalMsg(bts)
@@ -772,6 +848,7 @@ func (z *catchpointFileChunkV6) UnmarshalMsg(bts []byte) (o []byte, err error) {
 						return
 					}
 				}
+				zb0005 = "kv"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -779,6 +856,7 @@ func (z *catchpointFileChunkV6) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0006 = true
 		}
 	}
 	o = bts
@@ -858,7 +936,11 @@ func (z *catchpointStateProofVerificationContext) UnmarshalMsg(bts []byte) (o []
 	var field []byte
 	_ = field
 	var zb0002 int
+	var zb0004 string
+	var zb0005 bool
 	var zb0003 bool
+	_ = zb0004
+	_ = zb0005
 	zb0002, zb0003, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0002, zb0003, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -866,26 +948,27 @@ func (z *catchpointStateProofVerificationContext) UnmarshalMsg(bts []byte) (o []
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0002 > 0 {
 			zb0002--
-			var zb0004 int
-			var zb0005 bool
-			zb0004, zb0005, bts, err = msgp.ReadArrayHeaderBytes(bts)
+			var zb0006 int
+			var zb0007 bool
+			zb0006, zb0007, bts, err = msgp.ReadArrayHeaderBytes(bts)
 			if err != nil {
 				err = msgp.WrapError(err, "struct-from-array", "Data")
 				return
 			}
-			if zb0004 > SPContextPerCatchpointFile {
-				err = msgp.ErrOverflow(uint64(zb0004), uint64(SPContextPerCatchpointFile))
+			if zb0006 > SPContextPerCatchpointFile {
+				err = msgp.ErrOverflow(uint64(zb0006), uint64(SPContextPerCatchpointFile))
 				err = msgp.WrapError(err, "struct-from-array", "Data")
 				return
 			}
-			if zb0005 {
+			if zb0007 {
 				(*z).Data = nil
-			} else if (*z).Data != nil && cap((*z).Data) >= zb0004 {
-				(*z).Data = ((*z).Data)[:zb0004]
+			} else if (*z).Data != nil && cap((*z).Data) >= zb0006 {
+				(*z).Data = ((*z).Data)[:zb0006]
 			} else {
-				(*z).Data = make([]ledgercore.StateProofVerificationContext, zb0004)
+				(*z).Data = make([]ledgercore.StateProofVerificationContext, zb0006)
 			}
 			for zb0001 := range (*z).Data {
 				bts, err = (*z).Data[zb0001].UnmarshalMsg(bts)
@@ -919,24 +1002,28 @@ func (z *catchpointStateProofVerificationContext) UnmarshalMsg(bts []byte) (o []
 			}
 			switch string(field) {
 			case "spd":
-				var zb0006 int
-				var zb0007 bool
-				zb0006, zb0007, bts, err = msgp.ReadArrayHeaderBytes(bts)
+				if zb0005 && zb0004 > "spd" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				var zb0008 int
+				var zb0009 bool
+				zb0008, zb0009, bts, err = msgp.ReadArrayHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Data")
 					return
 				}
-				if zb0006 > SPContextPerCatchpointFile {
-					err = msgp.ErrOverflow(uint64(zb0006), uint64(SPContextPerCatchpointFile))
+				if zb0008 > SPContextPerCatchpointFile {
+					err = msgp.ErrOverflow(uint64(zb0008), uint64(SPContextPerCatchpointFile))
 					err = msgp.WrapError(err, "Data")
 					return
 				}
-				if zb0007 {
+				if zb0009 {
 					(*z).Data = nil
-				} else if (*z).Data != nil && cap((*z).Data) >= zb0006 {
-					(*z).Data = ((*z).Data)[:zb0006]
+				} else if (*z).Data != nil && cap((*z).Data) >= zb0008 {
+					(*z).Data = ((*z).Data)[:zb0008]
 				} else {
-					(*z).Data = make([]ledgercore.StateProofVerificationContext, zb0006)
+					(*z).Data = make([]ledgercore.StateProofVerificationContext, zb0008)
 				}
 				for zb0001 := range (*z).Data {
 					bts, err = (*z).Data[zb0001].UnmarshalMsg(bts)
@@ -945,6 +1032,7 @@ func (z *catchpointStateProofVerificationContext) UnmarshalMsg(bts []byte) (o []
 						return
 					}
 				}
+				zb0004 = "spd"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -952,6 +1040,7 @@ func (z *catchpointStateProofVerificationContext) UnmarshalMsg(bts []byte) (o []
 					return
 				}
 			}
+			zb0005 = true
 		}
 	}
 	o = bts

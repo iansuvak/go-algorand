@@ -61,7 +61,11 @@ func (z *netPrioResponse) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0001 int
+	var zb0003 string
+	var zb0004 bool
 	var zb0002 bool
+	_ = zb0003
+	_ = zb0004
 	zb0001, zb0002, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0001, zb0002, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -69,16 +73,17 @@ func (z *netPrioResponse) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0001 > 0 {
 			zb0001--
-			var zb0003 int
-			zb0003, err = msgp.ReadBytesBytesHeader(bts)
+			var zb0005 int
+			zb0005, err = msgp.ReadBytesBytesHeader(bts)
 			if err != nil {
 				err = msgp.WrapError(err, "struct-from-array", "Nonce")
 				return
 			}
-			if zb0003 > netPrioChallengeSize {
-				err = msgp.ErrOverflow(uint64(zb0003), uint64(netPrioChallengeSize))
+			if zb0005 > netPrioChallengeSize {
+				err = msgp.ErrOverflow(uint64(zb0005), uint64(netPrioChallengeSize))
 				return
 			}
 			(*z).Nonce, bts, err = msgp.ReadStringBytes(bts)
@@ -111,14 +116,18 @@ func (z *netPrioResponse) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "Nonce":
-				var zb0004 int
-				zb0004, err = msgp.ReadBytesBytesHeader(bts)
+				if zb0004 && zb0003 > "Nonce" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				var zb0006 int
+				zb0006, err = msgp.ReadBytesBytesHeader(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Nonce")
 					return
 				}
-				if zb0004 > netPrioChallengeSize {
-					err = msgp.ErrOverflow(uint64(zb0004), uint64(netPrioChallengeSize))
+				if zb0006 > netPrioChallengeSize {
+					err = msgp.ErrOverflow(uint64(zb0006), uint64(netPrioChallengeSize))
 					return
 				}
 				(*z).Nonce, bts, err = msgp.ReadStringBytes(bts)
@@ -126,6 +135,7 @@ func (z *netPrioResponse) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					err = msgp.WrapError(err, "Nonce")
 					return
 				}
+				zb0003 = "Nonce"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -133,6 +143,7 @@ func (z *netPrioResponse) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0004 = true
 		}
 	}
 	o = bts
@@ -233,7 +244,11 @@ func (z *netPrioResponseSigned) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0001 int
+	var zb0003 string
+	var zb0004 bool
 	var zb0002 bool
+	_ = zb0003
+	_ = zb0004
 	zb0001, zb0002, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0001, zb0002, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -241,27 +256,33 @@ func (z *netPrioResponseSigned) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0001 > 0 {
 			zb0001--
-			var zb0003 int
-			var zb0004 bool
-			zb0003, zb0004, bts, err = msgp.ReadMapHeaderBytes(bts)
+			var zb0005 int
+			var zb0007 string
+			var zb0008 bool
+			var zb0006 bool
+			_ = zb0007
+			_ = zb0008
+			zb0005, zb0006, bts, err = msgp.ReadMapHeaderBytes(bts)
 			if _, ok := err.(msgp.TypeError); ok {
-				zb0003, zb0004, bts, err = msgp.ReadArrayHeaderBytes(bts)
+				zb0005, zb0006, bts, err = msgp.ReadArrayHeaderBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "struct-from-array", "Response")
 					return
 				}
-				if zb0003 > 0 {
-					zb0003--
-					var zb0005 int
-					zb0005, err = msgp.ReadBytesBytesHeader(bts)
+				err = &msgp.ErrNonCanonical{}
+				if zb0005 > 0 {
+					zb0005--
+					var zb0009 int
+					zb0009, err = msgp.ReadBytesBytesHeader(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "struct-from-array", "Response", "struct-from-array", "Nonce")
 						return
 					}
-					if zb0005 > netPrioChallengeSize {
-						err = msgp.ErrOverflow(uint64(zb0005), uint64(netPrioChallengeSize))
+					if zb0009 > netPrioChallengeSize {
+						err = msgp.ErrOverflow(uint64(zb0009), uint64(netPrioChallengeSize))
 						return
 					}
 					(*z).Response.Nonce, bts, err = msgp.ReadStringBytes(bts)
@@ -270,8 +291,8 @@ func (z *netPrioResponseSigned) UnmarshalMsg(bts []byte) (o []byte, err error) {
 						return
 					}
 				}
-				if zb0003 > 0 {
-					err = msgp.ErrTooManyArrayFields(zb0003)
+				if zb0005 > 0 {
+					err = msgp.ErrTooManyArrayFields(zb0005)
 					if err != nil {
 						err = msgp.WrapError(err, "struct-from-array", "Response", "struct-from-array")
 						return
@@ -282,11 +303,11 @@ func (z *netPrioResponseSigned) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					err = msgp.WrapError(err, "struct-from-array", "Response")
 					return
 				}
-				if zb0004 {
+				if zb0006 {
 					(*z).Response = netPrioResponse{}
 				}
-				for zb0003 > 0 {
-					zb0003--
+				for zb0005 > 0 {
+					zb0005--
 					field, bts, err = msgp.ReadMapKeyZC(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "struct-from-array", "Response")
@@ -294,14 +315,18 @@ func (z *netPrioResponseSigned) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					}
 					switch string(field) {
 					case "Nonce":
-						var zb0006 int
-						zb0006, err = msgp.ReadBytesBytesHeader(bts)
+						if zb0008 && zb0007 > "Nonce" {
+							err = &msgp.ErrNonCanonical{}
+							return
+						}
+						var zb0010 int
+						zb0010, err = msgp.ReadBytesBytesHeader(bts)
 						if err != nil {
 							err = msgp.WrapError(err, "struct-from-array", "Response", "Nonce")
 							return
 						}
-						if zb0006 > netPrioChallengeSize {
-							err = msgp.ErrOverflow(uint64(zb0006), uint64(netPrioChallengeSize))
+						if zb0010 > netPrioChallengeSize {
+							err = msgp.ErrOverflow(uint64(zb0010), uint64(netPrioChallengeSize))
 							return
 						}
 						(*z).Response.Nonce, bts, err = msgp.ReadStringBytes(bts)
@@ -309,6 +334,7 @@ func (z *netPrioResponseSigned) UnmarshalMsg(bts []byte) (o []byte, err error) {
 							err = msgp.WrapError(err, "struct-from-array", "Response", "Nonce")
 							return
 						}
+						zb0007 = "Nonce"
 					default:
 						err = msgp.ErrNoField(string(field))
 						if err != nil {
@@ -316,6 +342,7 @@ func (z *netPrioResponseSigned) UnmarshalMsg(bts []byte) (o []byte, err error) {
 							return
 						}
 					}
+					zb0008 = true
 				}
 			}
 		}
@@ -367,25 +394,34 @@ func (z *netPrioResponseSigned) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "Response":
-				var zb0007 int
-				var zb0008 bool
-				zb0007, zb0008, bts, err = msgp.ReadMapHeaderBytes(bts)
+				if zb0004 && zb0003 > "Response" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
+				var zb0011 int
+				var zb0013 string
+				var zb0014 bool
+				var zb0012 bool
+				_ = zb0013
+				_ = zb0014
+				zb0011, zb0012, bts, err = msgp.ReadMapHeaderBytes(bts)
 				if _, ok := err.(msgp.TypeError); ok {
-					zb0007, zb0008, bts, err = msgp.ReadArrayHeaderBytes(bts)
+					zb0011, zb0012, bts, err = msgp.ReadArrayHeaderBytes(bts)
 					if err != nil {
 						err = msgp.WrapError(err, "Response")
 						return
 					}
-					if zb0007 > 0 {
-						zb0007--
-						var zb0009 int
-						zb0009, err = msgp.ReadBytesBytesHeader(bts)
+					err = &msgp.ErrNonCanonical{}
+					if zb0011 > 0 {
+						zb0011--
+						var zb0015 int
+						zb0015, err = msgp.ReadBytesBytesHeader(bts)
 						if err != nil {
 							err = msgp.WrapError(err, "Response", "struct-from-array", "Nonce")
 							return
 						}
-						if zb0009 > netPrioChallengeSize {
-							err = msgp.ErrOverflow(uint64(zb0009), uint64(netPrioChallengeSize))
+						if zb0015 > netPrioChallengeSize {
+							err = msgp.ErrOverflow(uint64(zb0015), uint64(netPrioChallengeSize))
 							return
 						}
 						(*z).Response.Nonce, bts, err = msgp.ReadStringBytes(bts)
@@ -394,8 +430,8 @@ func (z *netPrioResponseSigned) UnmarshalMsg(bts []byte) (o []byte, err error) {
 							return
 						}
 					}
-					if zb0007 > 0 {
-						err = msgp.ErrTooManyArrayFields(zb0007)
+					if zb0011 > 0 {
+						err = msgp.ErrTooManyArrayFields(zb0011)
 						if err != nil {
 							err = msgp.WrapError(err, "Response", "struct-from-array")
 							return
@@ -406,11 +442,11 @@ func (z *netPrioResponseSigned) UnmarshalMsg(bts []byte) (o []byte, err error) {
 						err = msgp.WrapError(err, "Response")
 						return
 					}
-					if zb0008 {
+					if zb0012 {
 						(*z).Response = netPrioResponse{}
 					}
-					for zb0007 > 0 {
-						zb0007--
+					for zb0011 > 0 {
+						zb0011--
 						field, bts, err = msgp.ReadMapKeyZC(bts)
 						if err != nil {
 							err = msgp.WrapError(err, "Response")
@@ -418,14 +454,18 @@ func (z *netPrioResponseSigned) UnmarshalMsg(bts []byte) (o []byte, err error) {
 						}
 						switch string(field) {
 						case "Nonce":
-							var zb0010 int
-							zb0010, err = msgp.ReadBytesBytesHeader(bts)
+							if zb0014 && zb0013 > "Nonce" {
+								err = &msgp.ErrNonCanonical{}
+								return
+							}
+							var zb0016 int
+							zb0016, err = msgp.ReadBytesBytesHeader(bts)
 							if err != nil {
 								err = msgp.WrapError(err, "Response", "Nonce")
 								return
 							}
-							if zb0010 > netPrioChallengeSize {
-								err = msgp.ErrOverflow(uint64(zb0010), uint64(netPrioChallengeSize))
+							if zb0016 > netPrioChallengeSize {
+								err = msgp.ErrOverflow(uint64(zb0016), uint64(netPrioChallengeSize))
 								return
 							}
 							(*z).Response.Nonce, bts, err = msgp.ReadStringBytes(bts)
@@ -433,6 +473,7 @@ func (z *netPrioResponseSigned) UnmarshalMsg(bts []byte) (o []byte, err error) {
 								err = msgp.WrapError(err, "Response", "Nonce")
 								return
 							}
+							zb0013 = "Nonce"
 						default:
 							err = msgp.ErrNoField(string(field))
 							if err != nil {
@@ -440,26 +481,43 @@ func (z *netPrioResponseSigned) UnmarshalMsg(bts []byte) (o []byte, err error) {
 								return
 							}
 						}
+						zb0014 = true
 					}
 				}
+				zb0003 = "Response"
 			case "Round":
+				if zb0004 && zb0003 > "Round" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Round.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Round")
 					return
 				}
+				zb0003 = "Round"
 			case "Sender":
+				if zb0004 && zb0003 > "Sender" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Sender.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Sender")
 					return
 				}
+				zb0003 = "Sender"
 			case "Sig":
+				if zb0004 && zb0003 > "Sig" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Sig.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Sig")
 					return
 				}
+				zb0003 = "Sig"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -467,6 +525,7 @@ func (z *netPrioResponseSigned) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0004 = true
 		}
 	}
 	o = bts

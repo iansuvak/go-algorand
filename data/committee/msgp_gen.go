@@ -115,7 +115,11 @@ func (z *Credential) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0001 int
+	var zb0003 string
+	var zb0004 bool
 	var zb0002 bool
+	_ = zb0003
+	_ = zb0004
 	zb0001, zb0002, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0001, zb0002, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -123,6 +127,7 @@ func (z *Credential) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0001 > 0 {
 			zb0001--
 			(*z).Weight, bts, err = msgp.ReadUint64Bytes(bts)
@@ -187,35 +192,60 @@ func (z *Credential) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "wt":
+				if zb0004 && zb0003 > "wt" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).Weight, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Weight")
 					return
 				}
+				zb0003 = "wt"
 			case "h":
+				if zb0004 && zb0003 > "h" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).VrfOut.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "VrfOut")
 					return
 				}
+				zb0003 = "h"
 			case "ds":
+				if zb0004 && zb0003 > "ds" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).DomainSeparationEnabled, bts, err = msgp.ReadBoolBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "DomainSeparationEnabled")
 					return
 				}
+				zb0003 = "ds"
 			case "hc":
+				if zb0004 && zb0003 > "hc" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Hashable.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Hashable")
 					return
 				}
+				zb0003 = "hc"
 			case "pf":
+				if zb0004 && zb0003 > "pf" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).UnauthenticatedCredential.Proof.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Proof")
 					return
 				}
+				zb0003 = "pf"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -223,6 +253,7 @@ func (z *Credential) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0004 = true
 		}
 	}
 	o = bts
@@ -329,7 +360,11 @@ func (z *UnauthenticatedCredential) UnmarshalMsg(bts []byte) (o []byte, err erro
 	var field []byte
 	_ = field
 	var zb0001 int
+	var zb0003 string
+	var zb0004 bool
 	var zb0002 bool
+	_ = zb0003
+	_ = zb0004
 	zb0001, zb0002, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0001, zb0002, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -337,6 +372,7 @@ func (z *UnauthenticatedCredential) UnmarshalMsg(bts []byte) (o []byte, err erro
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0001 > 0 {
 			zb0001--
 			bts, err = (*z).Proof.UnmarshalMsg(bts)
@@ -369,11 +405,16 @@ func (z *UnauthenticatedCredential) UnmarshalMsg(bts []byte) (o []byte, err erro
 			}
 			switch string(field) {
 			case "pf":
+				if zb0004 && zb0003 > "pf" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Proof.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Proof")
 					return
 				}
+				zb0003 = "pf"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -381,6 +422,7 @@ func (z *UnauthenticatedCredential) UnmarshalMsg(bts []byte) (o []byte, err erro
 					return
 				}
 			}
+			zb0004 = true
 		}
 	}
 	o = bts
@@ -459,7 +501,11 @@ func (z *hashableCredential) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0001 int
+	var zb0003 string
+	var zb0004 bool
 	var zb0002 bool
+	_ = zb0003
+	_ = zb0004
 	zb0001, zb0002, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0001, zb0002, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -467,6 +513,7 @@ func (z *hashableCredential) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0001 > 0 {
 			zb0001--
 			bts, err = (*z).RawOut.UnmarshalMsg(bts)
@@ -515,23 +562,38 @@ func (z *hashableCredential) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "v":
+				if zb0004 && zb0003 > "v" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).RawOut.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "RawOut")
 					return
 				}
+				zb0003 = "v"
 			case "m":
+				if zb0004 && zb0003 > "m" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Member.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Member")
 					return
 				}
+				zb0003 = "m"
 			case "i":
+				if zb0004 && zb0003 > "i" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).Iter, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Iter")
 					return
 				}
+				zb0003 = "i"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -539,6 +601,7 @@ func (z *hashableCredential) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0004 = true
 		}
 	}
 	o = bts

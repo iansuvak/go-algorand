@@ -43,7 +43,11 @@ func (z *EncodedBlockCert) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0001 int
+	var zb0003 string
+	var zb0004 bool
 	var zb0002 bool
+	_ = zb0003
+	_ = zb0004
 	zb0001, zb0002, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0001, zb0002, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -51,6 +55,7 @@ func (z *EncodedBlockCert) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0001 > 0 {
 			zb0001--
 			bts, err = (*z).Block.UnmarshalMsg(bts)
@@ -91,17 +96,27 @@ func (z *EncodedBlockCert) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "block":
+				if zb0004 && zb0003 > "block" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Block.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Block")
 					return
 				}
+				zb0003 = "block"
 			case "cert":
+				if zb0004 && zb0003 > "cert" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Certificate.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Certificate")
 					return
 				}
+				zb0003 = "cert"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -109,6 +124,7 @@ func (z *EncodedBlockCert) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0004 = true
 		}
 	}
 	o = bts

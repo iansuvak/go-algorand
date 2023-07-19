@@ -77,7 +77,11 @@ func (z *AccountApplicationModel) UnmarshalMsg(bts []byte) (o []byte, err error)
 	var field []byte
 	_ = field
 	var zb0001 int
+	var zb0003 string
+	var zb0004 bool
 	var zb0002 bool
+	_ = zb0003
+	_ = zb0004
 	zb0001, zb0002, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0001, zb0002, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -85,6 +89,7 @@ func (z *AccountApplicationModel) UnmarshalMsg(bts []byte) (o []byte, err error)
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0001 > 0 {
 			zb0001--
 			if msgp.IsNil(bts) {
@@ -147,6 +152,10 @@ func (z *AccountApplicationModel) UnmarshalMsg(bts []byte) (o []byte, err error)
 			}
 			switch string(field) {
 			case "app-local-state":
+				if zb0004 && zb0003 > "app-local-state" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				if msgp.IsNil(bts) {
 					bts, err = msgp.ReadNilBytes(bts)
 					if err != nil {
@@ -163,7 +172,12 @@ func (z *AccountApplicationModel) UnmarshalMsg(bts []byte) (o []byte, err error)
 						return
 					}
 				}
+				zb0003 = "app-local-state"
 			case "app-params":
+				if zb0004 && zb0003 > "app-params" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				if msgp.IsNil(bts) {
 					bts, err = msgp.ReadNilBytes(bts)
 					if err != nil {
@@ -180,6 +194,7 @@ func (z *AccountApplicationModel) UnmarshalMsg(bts []byte) (o []byte, err error)
 						return
 					}
 				}
+				zb0003 = "app-params"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -187,6 +202,7 @@ func (z *AccountApplicationModel) UnmarshalMsg(bts []byte) (o []byte, err error)
 					return
 				}
 			}
+			zb0004 = true
 		}
 	}
 	o = bts
@@ -278,7 +294,11 @@ func (z *AccountAssetModel) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0001 int
+	var zb0003 string
+	var zb0004 bool
 	var zb0002 bool
+	_ = zb0003
+	_ = zb0004
 	zb0001, zb0002, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0001, zb0002, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -286,6 +306,7 @@ func (z *AccountAssetModel) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0001 > 0 {
 			zb0001--
 			if msgp.IsNil(bts) {
@@ -348,6 +369,10 @@ func (z *AccountAssetModel) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "asset-params":
+				if zb0004 && zb0003 > "asset-params" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				if msgp.IsNil(bts) {
 					bts, err = msgp.ReadNilBytes(bts)
 					if err != nil {
@@ -364,7 +389,12 @@ func (z *AccountAssetModel) UnmarshalMsg(bts []byte) (o []byte, err error) {
 						return
 					}
 				}
+				zb0003 = "asset-params"
 			case "asset-holding":
+				if zb0004 && zb0003 > "asset-holding" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				if msgp.IsNil(bts) {
 					bts, err = msgp.ReadNilBytes(bts)
 					if err != nil {
@@ -381,6 +411,7 @@ func (z *AccountAssetModel) UnmarshalMsg(bts []byte) (o []byte, err error) {
 						return
 					}
 				}
+				zb0003 = "asset-holding"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -388,6 +419,7 @@ func (z *AccountAssetModel) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0004 = true
 		}
 	}
 	o = bts

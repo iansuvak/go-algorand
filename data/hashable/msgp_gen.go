@@ -49,7 +49,11 @@ func (z *Message) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0001 int
+	var zb0003 string
+	var zb0004 bool
 	var zb0002 bool
+	_ = zb0003
+	_ = zb0004
 	zb0001, zb0002, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0001, zb0002, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -57,6 +61,7 @@ func (z *Message) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0001 > 0 {
 			zb0001--
 			(*z).Message, bts, err = msgp.ReadStringBytes(bts)
@@ -89,11 +94,16 @@ func (z *Message) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "msg":
+				if zb0004 && zb0003 > "msg" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).Message, bts, err = msgp.ReadStringBytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Message")
 					return
 				}
+				zb0003 = "msg"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -101,6 +111,7 @@ func (z *Message) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0004 = true
 		}
 	}
 	o = bts

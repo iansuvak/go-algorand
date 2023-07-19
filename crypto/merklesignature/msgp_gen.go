@@ -156,7 +156,11 @@ func (z *KeyRoundPair) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0001 int
+	var zb0003 string
+	var zb0004 bool
 	var zb0002 bool
+	_ = zb0003
+	_ = zb0004
 	zb0001, zb0002, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0001, zb0002, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -164,6 +168,7 @@ func (z *KeyRoundPair) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0001 > 0 {
 			zb0001--
 			(*z).Round, bts, err = msgp.ReadUint64Bytes(bts)
@@ -215,12 +220,21 @@ func (z *KeyRoundPair) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "rnd":
+				if zb0004 && zb0003 > "rnd" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).Round, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Round")
 					return
 				}
+				zb0003 = "rnd"
 			case "key":
+				if zb0004 && zb0003 > "key" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				if msgp.IsNil(bts) {
 					bts, err = msgp.ReadNilBytes(bts)
 					if err != nil {
@@ -237,6 +251,7 @@ func (z *KeyRoundPair) UnmarshalMsg(bts []byte) (o []byte, err error) {
 						return
 					}
 				}
+				zb0003 = "key"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -244,6 +259,7 @@ func (z *KeyRoundPair) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0004 = true
 		}
 	}
 	o = bts
@@ -328,7 +344,11 @@ func (z *Secrets) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0002 int
+	var zb0004 string
+	var zb0005 bool
 	var zb0003 bool
+	_ = zb0004
+	_ = zb0005
 	zb0002, zb0003, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0002, zb0003, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -336,6 +356,7 @@ func (z *Secrets) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0002 > 0 {
 			zb0002--
 			(*z).SignerContext.FirstValid, bts, err = msgp.ReadUint64Bytes(bts)
@@ -384,23 +405,38 @@ func (z *Secrets) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "fv":
+				if zb0005 && zb0004 > "fv" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).SignerContext.FirstValid, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "FirstValid")
 					return
 				}
+				zb0004 = "fv"
 			case "iv":
+				if zb0005 && zb0004 > "iv" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).SignerContext.KeyLifetime, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "KeyLifetime")
 					return
 				}
+				zb0004 = "iv"
 			case "tree":
+				if zb0005 && zb0004 > "tree" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).SignerContext.Tree.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Tree")
 					return
 				}
+				zb0004 = "tree"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -408,6 +444,7 @@ func (z *Secrets) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0005 = true
 		}
 	}
 	o = bts
@@ -495,7 +532,11 @@ func (z *Signature) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0001 int
+	var zb0003 string
+	var zb0004 bool
 	var zb0002 bool
+	_ = zb0003
+	_ = zb0004
 	zb0001, zb0002, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0001, zb0002, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -503,6 +544,7 @@ func (z *Signature) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0001 > 0 {
 			zb0001--
 			bts, err = (*z).Signature.UnmarshalMsg(bts)
@@ -559,29 +601,49 @@ func (z *Signature) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "sig":
+				if zb0004 && zb0003 > "sig" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Signature.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Signature")
 					return
 				}
+				zb0003 = "sig"
 			case "idx":
+				if zb0004 && zb0003 > "idx" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).VectorCommitmentIndex, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "VectorCommitmentIndex")
 					return
 				}
+				zb0003 = "idx"
 			case "prf":
+				if zb0004 && zb0003 > "prf" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Proof.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Proof")
 					return
 				}
+				zb0003 = "prf"
 			case "vkey":
+				if zb0004 && zb0003 > "vkey" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).VerifyingKey.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "VerifyingKey")
 					return
 				}
+				zb0003 = "vkey"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -589,6 +651,7 @@ func (z *Signature) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0004 = true
 		}
 	}
 	o = bts
@@ -667,7 +730,11 @@ func (z *SignerContext) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0001 int
+	var zb0003 string
+	var zb0004 bool
 	var zb0002 bool
+	_ = zb0003
+	_ = zb0004
 	zb0001, zb0002, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0001, zb0002, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -675,6 +742,7 @@ func (z *SignerContext) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0001 > 0 {
 			zb0001--
 			(*z).FirstValid, bts, err = msgp.ReadUint64Bytes(bts)
@@ -723,23 +791,38 @@ func (z *SignerContext) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "fv":
+				if zb0004 && zb0003 > "fv" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).FirstValid, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "FirstValid")
 					return
 				}
+				zb0003 = "fv"
 			case "iv":
+				if zb0004 && zb0003 > "iv" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).KeyLifetime, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "KeyLifetime")
 					return
 				}
+				zb0003 = "iv"
 			case "tree":
+				if zb0004 && zb0003 > "tree" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = (*z).Tree.UnmarshalMsg(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "Tree")
 					return
 				}
+				zb0003 = "tree"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -747,6 +830,7 @@ func (z *SignerContext) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0004 = true
 		}
 	}
 	o = bts
@@ -816,7 +900,11 @@ func (z *Verifier) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0002 int
+	var zb0004 string
+	var zb0005 bool
 	var zb0003 bool
+	_ = zb0004
+	_ = zb0005
 	zb0002, zb0003, bts, err = msgp.ReadMapHeaderBytes(bts)
 	if _, ok := err.(msgp.TypeError); ok {
 		zb0002, zb0003, bts, err = msgp.ReadArrayHeaderBytes(bts)
@@ -824,6 +912,7 @@ func (z *Verifier) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			err = msgp.WrapError(err)
 			return
 		}
+		err = &msgp.ErrNonCanonical{}
 		if zb0002 > 0 {
 			zb0002--
 			bts, err = msgp.ReadExactBytes(bts, ((*z).Commitment)[:])
@@ -864,17 +953,27 @@ func (z *Verifier) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			}
 			switch string(field) {
 			case "cmt":
+				if zb0005 && zb0004 > "cmt" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				bts, err = msgp.ReadExactBytes(bts, ((*z).Commitment)[:])
 				if err != nil {
 					err = msgp.WrapError(err, "Commitment")
 					return
 				}
+				zb0004 = "cmt"
 			case "lf":
+				if zb0005 && zb0004 > "lf" {
+					err = &msgp.ErrNonCanonical{}
+					return
+				}
 				(*z).KeyLifetime, bts, err = msgp.ReadUint64Bytes(bts)
 				if err != nil {
 					err = msgp.WrapError(err, "KeyLifetime")
 					return
 				}
+				zb0004 = "lf"
 			default:
 				err = msgp.ErrNoField(string(field))
 				if err != nil {
@@ -882,6 +981,7 @@ func (z *Verifier) UnmarshalMsg(bts []byte) (o []byte, err error) {
 					return
 				}
 			}
+			zb0005 = true
 		}
 	}
 	o = bts
