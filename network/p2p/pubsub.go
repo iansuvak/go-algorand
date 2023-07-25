@@ -22,7 +22,9 @@ import (
 
 	"github.com/algorand/go-algorand/config"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
+	pubsub_pb "github.com/libp2p/go-libp2p-pubsub/pb"
 	"github.com/libp2p/go-libp2p/core/host"
+	"golang.org/x/crypto/blake2b"
 )
 
 func init() {
@@ -87,9 +89,16 @@ func makePubSub(ctx context.Context, cfg config.Local, host host.Host) (*pubsub.
 		),
 		// pubsub.WithPeerGater(&pubsub.PeerGaterParams{}),
 		pubsub.WithSubscriptionFilter(pubsub.WrapLimitSubscriptionFilter(pubsub.NewAllowlistSubscriptionFilter(TXTopicName), 100)),
+		pubsub.WithValidateQueueSize(256),              // XXX default is 32
+		pubsub.WithValidateThrottle(cfg.TxBacklogSize), // XXX is this enough? too much?
 	}
 
 	return pubsub.NewGossipSub(ctx, host, options...)
+}
+
+func txMsgID(m *pubsub_pb.Message) string {
+	h := blake2b.Sum256(m.Data)
+	return string(h[:])
 }
 
 func (s *Service) joinTopic(topic string) (*pubsub.Topic, error) {
@@ -97,7 +106,13 @@ func (s *Service) joinTopic(topic string) (*pubsub.Topic, error) {
 	defer s.topicsMu.Unlock()
 
 	if _, ok := s.topics[topic]; !ok {
-		psTopic, err := s.pubsub.Join(topic)
+		var topt []pubsub.TopicOpt
+		switch topic {
+		case TXTopicName:
+			topt = append(topt, pubsub.WithTopicMessageIdFn(txMsgID))
+		}
+
+		psTopic, err := s.pubsub.Join(topic, topt...)
 		if err != nil {
 			return nil, err
 		}

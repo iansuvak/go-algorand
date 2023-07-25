@@ -278,19 +278,18 @@ func (n *P2PNetwork) txTopicValidator(ctx context.Context, peerID peer.ID, msg *
 		Received: time.Now().UnixNano(),
 	}
 	outmsg := n.handlers.Handle(inmsg)
-	if !outmsg.ValidationQueued {
-		switch outmsg.Action {
-		case Ignore:
-			return pubsub.ValidationIgnore
-		case Disconnect:
-			return pubsub.ValidationReject
-		case Broadcast:
-			return pubsub.ValidationAccept
-		}
+	// there was a decision made in the handler about this message
+	switch outmsg.Action {
+	case Ignore:
+		return pubsub.ValidationIgnore
+	case Disconnect:
+		return pubsub.ValidationReject
+	case Broadcast: // TxHandler.processIncomingTxn does not currently return this Action
+		return pubsub.ValidationAccept
+	default:
+		n.log.Warnf("handler returned invalid action %d", outmsg.Action)
+		return pubsub.ValidationIgnore
 	}
-	// txHandler queued txn for signature & pool validation
-	// XXX incorporate feedback for txHandler to tell us when a queued message is approved or rejected
-	return pubsub.ValidationAccept
 }
 
 // GetGenesisID implements GossipNode

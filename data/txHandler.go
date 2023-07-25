@@ -555,10 +555,9 @@ func (handler *TxHandler) dedupCanonical(ntx int, unverifiedTxGroup []transactio
 
 // processIncomingTxn decodes a transaction group from incoming message and enqueues into the back log for processing.
 // The function also performs some input data pre-validation;
-//  - txn groups are cut to MaxTxGroupSize size
-//  - message are checked for duplicates
-//  - transactions are checked for duplicates
-
+//   - txn groups are cut to MaxTxGroupSize size
+//   - message are checked for duplicates
+//   - transactions are checked for duplicates
 func (handler *TxHandler) processIncomingTxn(rawmsg network.IncomingMessage) network.OutgoingMessage {
 	var msgKey *crypto.Digest
 	var isDup bool
@@ -648,7 +647,6 @@ func (handler *TxHandler) processIncomingTxn(rawmsg network.IncomingMessage) net
 		unverifiedTxGroupHash: canonicalKey,
 		capguard:              capguard,
 	}:
-		// return network.OutgoingMessage{ValidationQueued: true} XXX
 	default:
 		// if we failed here we want to increase the corresponding metric. It might suggest that we
 		// want to increase the queue size.
