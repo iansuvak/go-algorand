@@ -78,7 +78,7 @@ func TestSubmitTX(t *testing.T) {
 	// Since we aren't using the transaction handler in this test, we need to register a pass-through handler
 	passThroughHandler := []TaggedMessageHandler{
 		{Tag: protocol.TxnTag, MessageHandler: HandlerFunc(func(msg IncomingMessage) OutgoingMessage {
-			return OutgoingMessage{ValidationQueued: true}
+			return OutgoingMessage{}
 		})},
 	}
 
