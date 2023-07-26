@@ -278,8 +278,6 @@ type OutgoingMessage struct {
 	// OnRelease is a function called when outgoing message, resulting from this incoming message, is released
 	// either by being sent or discarded.
 	OnRelease func()
-
-	ValidationQueued bool // this tells you to wait for a validation decision
 }
 
 // ForwardingPolicy is an enum indicating to whom we should send a message
