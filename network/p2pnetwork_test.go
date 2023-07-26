@@ -78,7 +78,7 @@ func TestSubmitTX(t *testing.T) {
 	// Since we aren't using the transaction handler in this test, we need to register a pass-through handler
 	passThroughHandler := []TaggedMessageHandler{
 		{Tag: protocol.TxnTag, MessageHandler: HandlerFunc(func(msg IncomingMessage) OutgoingMessage {
-			return OutgoingMessage{}
+			return OutgoingMessage{Action: Broadcast}
 		})},
 	}
 
@@ -96,8 +96,11 @@ func TestSubmitTX(t *testing.T) {
 		t,
 		func() bool {
 			netC.peerStatsMu.Lock()
-			netCpeerStatsA := netC.peerStats[netA.service.Host().ID()]
+			netCpeerStatsA, ok := netC.peerStats[netA.service.Host().ID()]
 			netC.peerStatsMu.Unlock()
+			if !ok {
+				return false
+			}
 			return atomic.LoadUint64(&netCpeerStatsA.txReceived) == 10
 		},
 		1*time.Second,
