@@ -21,31 +21,30 @@ import (
 	"crypto/rand"
 	"fmt"
 	"runtime"
+	"time"
 
 	"github.com/algorand/go-algorand/config"
 	"github.com/algorand/go-algorand/logging"
 	"github.com/algorand/go-deadlock"
-	"github.com/multiformats/go-multiaddr"
 
 	"github.com/libp2p/go-libp2p"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
-	peerstore "github.com/libp2p/go-libp2p/core/peer"
-
+	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/core/peerstore"
 	"github.com/libp2p/go-libp2p/p2p/muxer/yamux"
 	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
 )
 
 // Service manages integration with libp2p
 type Service struct {
-	log              logging.Logger
-	host             host.Host
-	privKey          crypto.PrivKey
-	streams          *streamManager
-	pubsub           *pubsub.PubSub
-	pubsubCtx        context.Context
-	initialPhonebook []multiaddr.Multiaddr
+	log       logging.Logger
+	host      host.Host
+	privKey   crypto.PrivKey
+	streams   *streamManager
+	pubsub    *pubsub.PubSub
+	pubsubCtx context.Context
 
 	topics   map[string]*pubsub.Topic
 	topicsMu deadlock.Mutex
@@ -54,8 +53,10 @@ type Service struct {
 // AlgorandWsProtocol defines a libp2p protocol name for algorand's websockets messages
 const AlgorandWsProtocol = "/algorand-ws/1.0.0"
 
+const dialTimeout = 30 * time.Second
+
 // MakeService creates a P2P service instance
-func MakeService(log logging.Logger, cfg config.Local, phonebookAddresses []string, streamHandler StreamHandler) (*Service, error) {
+func MakeService(log logging.Logger, cfg config.Local, pstore peerstore.Peerstore, streamHandler StreamHandler) (*Service, error) {
 	// ephemeral key for peer ID
 	privKey, _, err := crypto.GenerateEd25519Key(rand.Reader)
 	if err != nil {
@@ -73,7 +74,7 @@ func MakeService(log logging.Logger, cfg config.Local, phonebookAddresses []stri
 		libp2p.UserAgent(ua),
 		libp2p.Transport(tcp.NewTCPTransport),
 		libp2p.Muxer("/yamux/1.0.0", &ymx),
-		// libp2p.PeerStore(XXX), // default is empty in-memory peerstore
+		libp2p.Peerstore(pstore),
 		libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/0"), // need to include this to be able to get address for self
 		// libp2p.ConnectionGater(XXX),
 	)
@@ -90,25 +91,14 @@ func MakeService(log logging.Logger, cfg config.Local, phonebookAddresses []stri
 		return nil, err
 	}
 
-	multiAdrPhoneBook := make([]multiaddr.Multiaddr, 0)
-
-	for _, addr := range phonebookAddresses {
-		multiAdr, err := multiaddr.NewMultiaddr(addr)
-		if err != nil {
-			return nil, err
-		}
-		multiAdrPhoneBook = append(multiAdrPhoneBook, multiAdr)
-	}
-
 	return &Service{
-		log:              log,
-		privKey:          privKey,
-		host:             h,
-		streams:          sm,
-		pubsub:           ps,
-		pubsubCtx:        psCtx,
-		topics:           make(map[string]*pubsub.Topic),
-		initialPhonebook: multiAdrPhoneBook,
+		log:       log,
+		privKey:   privKey,
+		host:      h,
+		streams:   sm,
+		pubsub:    ps,
+		pubsubCtx: psCtx,
+		topics:    make(map[string]*pubsub.Topic),
 	}, nil
 }
 
@@ -122,17 +112,29 @@ func (s *Service) Host() host.Host {
 	return s.host
 }
 
-// MakeInitialConnections attempts to establish connections to the provided phonebook addresses
-func (s *Service) MakeInitialConnections() {
-	for _, addr := range s.initialPhonebook {
-		addrInfo, err := peerstore.AddrInfoFromP2pAddr(addr)
-		if err != nil {
-			s.log.Warnf("Failed to get address info for phonebook address: %s, err: %s", addr, err)
+// DialPeers attempts to establish connections to the provided phonebook addresses
+func (s *Service) DialPeers(targetConnCount int) {
+	peerIDs := s.host.Peerstore().Peers()
+	for _, peerID := range peerIDs {
+		// if we are at our target count stop trying to connect
+		if len(s.host.Network().Conns()) >= targetConnCount {
+			return
+		}
+		// if we are already connected to this peer, skip it
+		if len(s.host.Network().ConnsToPeer(peerID)) > 0 {
 			continue
 		}
-		err = s.Host().Connect(context.TODO(), *addrInfo)
+		peerInfo := s.host.Peerstore().PeerInfo(peerID)
+		err := s.DialNode(context.Background(), &peerInfo) // leaving the calls as blocking for now, to not over-connect beyond fanout
 		if err != nil {
-			s.log.Warnf("Failed to connect to phonebook address: %s, err: %s", addr, err)
+			s.log.Warnf("failed to connect to peer %s: %v", peerID, err)
 		}
 	}
+}
+
+// DialNode attempts to establish a connection to the provided peer
+func (s *Service) DialNode(ctx context.Context, peer *peer.AddrInfo) error {
+	ctx, cancel := context.WithTimeout(ctx, dialTimeout)
+	defer cancel()
+	return s.host.Connect(ctx, *peer)
 }

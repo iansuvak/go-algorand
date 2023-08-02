@@ -23,6 +23,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -31,6 +32,7 @@ import (
 	"github.com/algorand/go-algorand/config"
 	"github.com/algorand/go-algorand/logging"
 	"github.com/algorand/go-algorand/network/p2p"
+	"github.com/algorand/go-algorand/network/p2p/peerstore"
 	"github.com/algorand/go-algorand/protocol"
 	"github.com/algorand/go-deadlock"
 	"github.com/algorand/websocket"
@@ -39,7 +41,11 @@ import (
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
+	p2ppeerstore "github.com/libp2p/go-libp2p/core/peerstore"
+	"github.com/libp2p/go-libp2p/p2p/host/peerstore/pstoremem"
 )
+
+const peerStorePath = "peerstore.db"
 
 var outgoingMessagesBufferSize = int(
 	max(config.Consensus[protocol.ConsensusCurrentVersion].NumProposers,
@@ -83,8 +89,30 @@ type p2pPeerStats struct {
 }
 
 // NewP2PNetwork returns an instance of GossipNode that uses the p2p.Service
-func NewP2PNetwork(log logging.Logger, cfg config.Local, phonebookAddresses []string, genesisID string, networkID protocol.NetworkID) (*P2PNetwork, error) {
+func NewP2PNetwork(log logging.Logger, cfg config.Local, datadir string, phonebookAddresses []string, genesisID string, networkID protocol.NetworkID) (*P2PNetwork, error) {
 	const readBufferLen = 2048
+
+	// create Peerstore and add phonebook addresses
+	addrInfo, malformedAddrs := peerstore.PeerInfoFromAddrs(phonebookAddresses)
+	for malAddr, malErr := range malformedAddrs {
+		log.Infof("Ignoring malformed phonebook address %s: %s", malAddr, malErr)
+	}
+	var pstore p2ppeerstore.Peerstore
+	var err error
+	if datadir == "" { // use ephemeral peerstore for testing
+		pstore, err = pstoremem.NewPeerstore()
+		if err != nil {
+			return nil, err
+		}
+		for i := range addrInfo {
+			pstore.AddAddrs(addrInfo[i].ID, addrInfo[i].Addrs, p2ppeerstore.AddressTTL)
+		}
+	} else {
+		pstore, err = peerstore.NewPeerStore(context.Background(), filepath.Join(datadir, peerStorePath), addrInfo)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	net := &P2PNetwork{
 		log:          log,
@@ -106,8 +134,7 @@ func NewP2PNetwork(log logging.Logger, cfg config.Local, phonebookAddresses []st
 		broadcastQueueBulk:     make(chan broadcastRequest, 100),
 	}
 
-	var err error
-	net.service, err = p2p.MakeService(log, cfg, phonebookAddresses, net.streamHandler)
+	net.service, err = p2p.MakeService(log, cfg, pstore, net.streamHandler)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +162,10 @@ func (n *P2PNetwork) Start() {
 	go n.txTopicHandleLoop(n.ctx)
 	n.wg.Add(1)
 	go n.broadcaster.broadcastThread(n.wg.Done, n)
-	n.service.MakeInitialConnections()
+	n.service.DialPeers(n.config.GossipFanout)
+
+	n.wg.Add(1)
+	go n.meshThread()
 }
 
 // Stop closes sockets and stop threads.
@@ -258,6 +288,20 @@ func (c *wsPeerConnP2PImpl) CloseWithoutFlush() error {
 }
 
 func (c *wsPeerConnP2PImpl) UnderlyingConn() net.Conn { return nil }
+
+func (n *P2PNetwork) meshThread() {
+	defer n.wg.Done()
+	timer := time.NewTicker(meshThreadInterval)
+	defer timer.Stop()
+	for {
+		select {
+		case <-timer.C:
+			n.service.DialPeers(n.config.GossipFanout)
+		case <-n.ctx.Done():
+			return
+		}
+	}
+}
 
 func (n *P2PNetwork) txTopicHandleLoop(ctx context.Context) {
 	defer n.wg.Done()

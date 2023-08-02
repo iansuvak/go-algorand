@@ -184,26 +184,6 @@ func MakeFull(log logging.Logger, rootDir string, cfg config.Local, phonebookAdd
 	node.devMode = genesis.DevMode
 	node.config = cfg
 
-	// tie network, block fetcher, and agreement services together
-	var p2pNode network.GossipNode
-	if cfg.EnableP2P {
-		var err error
-		p2pNode, err = network.NewP2PNetwork(node.log, node.config, phonebookAddresses, genesis.ID(), genesis.Network)
-		if err != nil {
-			log.Errorf("could not create p2p node: %v", err)
-			return nil, err
-		}
-	} else {
-		wsNode, err := network.NewWebsocketNetwork(node.log, node.config, phonebookAddresses, genesis.ID(), genesis.Network, node)
-		if err != nil {
-			log.Errorf("could not create websocket node: %v", err)
-			return nil, err
-		}
-		wsNode.SetPrioScheme(node)
-		p2pNode = wsNode
-	}
-	node.net = p2pNode
-
 	// load stored data
 	genesisDir := filepath.Join(rootDir, genesis.ID())
 	ledgerPathnamePrefix := filepath.Join(genesisDir, config.LedgerFilenamePrefix)
@@ -219,6 +199,26 @@ func MakeFull(log logging.Logger, rootDir string, cfg config.Local, phonebookAdd
 		log.Errorf("Cannot load genesis allocation: %v", err)
 		return nil, err
 	}
+
+	// tie network, block fetcher, and agreement services together
+	var p2pNode network.GossipNode
+	if cfg.EnableP2P {
+		var err error
+		p2pNode, err = network.NewP2PNetwork(node.log, node.config, genesisDir, phonebookAddresses, genesis.ID(), genesis.Network)
+		if err != nil {
+			log.Errorf("could not create p2p node: %v", err)
+			return nil, err
+		}
+	} else {
+		wsNode, err := network.NewWebsocketNetwork(node.log, node.config, phonebookAddresses, genesis.ID(), genesis.Network, node)
+		if err != nil {
+			log.Errorf("could not create websocket node: %v", err)
+			return nil, err
+		}
+		wsNode.SetPrioScheme(node)
+		p2pNode = wsNode
+	}
+	node.net = p2pNode
 
 	node.cryptoPool = execpool.MakePool(node)
 	node.lowPriorityCryptoVerificationPool = execpool.MakeBacklog(node.cryptoPool, 2*node.cryptoPool.GetParallelism(), execpool.LowPriority, node)
