@@ -63,9 +63,6 @@ type Local struct {
 	// to deduplicate redundant connections
 	PublicAddress string `version[0]:""`
 
-	// EnableP2P enables using libp2p
-	EnableP2P bool `version[28]:"false"`
-
 	MaxConnectionsPerIP int `version[3]:"30" version[27]:"15"`
 
 	// 0 == disable
@@ -524,8 +521,8 @@ type Local struct {
 	// When it exceeds this capacity, it redirects the block requests to a different node
 	BlockServiceMemCap uint64 `version[28]:"500000000"`
 
-	// P2PEnable turns on the peer to peer network
-	P2PEnable bool `version[29]:"false"`
+	// EnableP2P turns on the peer to peer network
+	EnableP2P bool `version[29]:"false"`
 
 	// P2PPersistPeerID will write the private key used for the node's PeerID to the P2PPrivateKeyLocation.
 	// This is only used when P2PEnable is true. If P2PPrivateKey is not specified, it uses the default location.
