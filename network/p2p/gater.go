@@ -17,8 +17,8 @@
 package p2p
 
 import (
-	"github.com/libp2p/go-libp2p-core/control"
-	"github.com/libp2p/go-libp2p-core/network"
+	"github.com/libp2p/go-libp2p/core/control"
+	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	ma "github.com/multiformats/go-multiaddr"
 )
@@ -26,9 +26,8 @@ import (
 // methods defined here implement libp2p's ConnectionGater interface
 
 // InterceptPeerDial implements connmgr.ConnectionGater
-// Trivially allow all outgoing connections right now
-func (_ *Service) InterceptPeerDial(p peer.ID) (allow bool) {
-	return true
+func (s *Service) InterceptPeerDial(p peer.ID) (allow bool) {
+	return s.host.ID() != p
 }
 
 // InterceptAddrDial implements connmgr.ConnectionGater
@@ -40,8 +39,8 @@ func (_ *Service) InterceptAddrDial(peer.ID, ma.Multiaddr) (allow bool) {
 }
 
 // InterceptAccept tests whether an incipient inbound connection is allowed.
-func InterceptAccept(network.ConnMultiaddrs) (allow bool) {
-
+func (_ *Service) InterceptAccept(network.ConnMultiaddrs) (allow bool) {
+	return true
 }
 
 // InterceptSecured tests whether a given connection, now authenticated,
@@ -50,8 +49,8 @@ func InterceptAccept(network.ConnMultiaddrs) (allow bool) {
 // This is called by the upgrader, after it has performed the security
 // handshake, and before it negotiates the muxer, or by the directly by the
 // transport, at the exact same checkpoint.
-func InterceptSecured(network.Direction, peer.ID, network.ConnMultiaddrs) (allow bool) {
-
+func (_ *Service) InterceptSecured(network.Direction, peer.ID, network.ConnMultiaddrs) (allow bool) {
+	return true
 }
 
 // InterceptUpgraded tests whether a fully capable connection is allowed.
@@ -59,8 +58,6 @@ func InterceptSecured(network.Direction, peer.ID, network.ConnMultiaddrs) (allow
 // At this point, the connection a multiplexer has been selected.
 // When rejecting a connection, the gater can return a DisconnectReason.
 // Refer to the godoc on the ConnectionGater type for more information.
-//
-// NOTE: the go-libp2p implementation currently IGNORES the disconnect reason.
-func InterceptUpgraded(network.Conn) (allow bool, reason control.DisconnectReason) {
-
+func (_ *Service) InterceptUpgraded(network.Conn) (allow bool, reason control.DisconnectReason) {
+	return true, control.DisconnectReason(0)
 }
