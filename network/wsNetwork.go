@@ -2492,6 +2492,8 @@ func (wn *WebsocketNetwork) SetPeerData(peer Peer, key string, value interface{}
 func NewWebsocketNetwork(log logging.Logger, config config.Local, phonebookAddresses []string, genesisID string, networkID protocol.NetworkID, nodeInfo NodeInfo) (wn *WebsocketNetwork, err error) {
 	phonebook := MakePhonebook(config.ConnectionsRateLimitingCount,
 		time.Duration(config.ConnectionsRateLimitingWindowSeconds)*time.Second)
+	// In case we have a mix of multi-addrs and host:ip strings, try converting any valid mutliaddrs before creating the phonebook
+	phonebookAddresses = multiAddrsToIPPorts(phonebookAddresses)
 	phonebook.ReplacePeerList(phonebookAddresses, string(networkID), PhoneBookEntryRelayRole)
 	wn = &WebsocketNetwork{
 		log:               log,
@@ -2733,4 +2735,35 @@ func (wn *WebsocketNetwork) postMessagesOfInterestThread() {
 // SubstituteGenesisID substitutes the "{genesisID}" with their network-specific genesisID.
 func (wn *WebsocketNetwork) SubstituteGenesisID(rawURL string) string {
 	return strings.Replace(rawURL, "{genesisID}", wn.GenesisID, -1)
+}
+
+// multiAddrsToIPPorts takes a list of addresses and converts any that are valid multiaddrs into
+// host:port format. Any that are not are left as is
+func multiAddrsToIPPorts(addrs []string) []string {
+	for idx, addr := range addrs {
+		if maddr, err := multiaddr.NewMultiaddr(addr); err == nil {
+			if ipPort, err := multiaddrToHostPort(maddr); err == nil {
+				addrs[idx] = ipPort
+			}
+		}
+	}
+	return addrs
+}
+
+// multiaddrToHostPort takes a multiaddr and returns a valid ip:port if possible or an error otherwise
+func multiaddrToHostPort(ma multiaddr.Multiaddr) (string, error) {
+	host, err := ma.ValueForProtocol(multiaddr.P_IP4)
+	if err != nil {
+		host, err = ma.ValueForProtocol(multiaddr.P_DNS4)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	port, err := ma.ValueForProtocol(multiaddr.P_TCP)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s:%s", host, port), nil
 }

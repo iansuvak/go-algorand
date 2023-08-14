@@ -4596,3 +4596,32 @@ func TestSendMessageCallbackDrain(t *testing.T) {
 		50*time.Millisecond,
 	)
 }
+
+func TestMultiAddrConversion(t *testing.T) {
+	inputAddrs := []string{
+		"/ip4/127.0.0.1/tcp/8080",
+		"/ip4/10.0.0.1/udp/1234",  // Note: This is a valid maddr but doesn't include tcp port which is required so skip it
+		"0.0.0.0:1234",            // Do nothing
+		"invalid",                 // Do nothing
+		"/dns4/test.com/tcp/4321", // Convert dns4
+		"/dns4/test.com/udp/5678", // Do nothing
+		"/ip4/192.68.0.1/tcp/8081/p2p/QmWzgJVGSY3ZJiKYZXeCDTJrb7t2A8CcZ2yWRYeDoLxZNQ", // Convert while making sure p2p protocol id doesn't affect the conversion
+		"/ip4/192.68.0.1/tcp/8082/p2p/invalid-peer-id",                                // Don't convert since the peer-id is invalid
+	}
+
+	outputAddrs := []string{
+		"127.0.0.1:8080",
+		"/ip4/10.0.0.1/udp/1234",
+		"0.0.0.0:1234",
+		"invalid",
+		"test.com:4321",
+		"/dns4/test.com/udp/5678",
+		"192.68.0.1:8081",
+		"/ip4/192.68.0.1/tcp/8082/p2p/invalid-peer-id",
+	}
+
+	convertedAddrs := multiAddrsToIPPorts(inputAddrs)
+
+	require.Equal(t, outputAddrs, convertedAddrs)
+
+}
