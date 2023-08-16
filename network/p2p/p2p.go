@@ -28,7 +28,6 @@ import (
 
 	"github.com/libp2p/go-libp2p"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
-	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/peerstore"
@@ -40,7 +39,6 @@ import (
 type Service struct {
 	log       logging.Logger
 	host      host.Host
-	privKey   crypto.PrivKey
 	streams   *streamManager
 	pubsub    *pubsub.PubSub
 	pubsubCtx context.Context
@@ -55,7 +53,7 @@ const AlgorandWsProtocol = "/algorand-ws/1.0.0"
 const dialTimeout = 30 * time.Second
 
 // MakeService creates a P2P service instance
-func MakeService(log logging.Logger, cfg config.Local, datadir string, pstore peerstore.Peerstore, wsStreamHandler StreamHandler) (*Service, error) {
+func MakeService(ctx context.Context, log logging.Logger, cfg config.Local, datadir string, pstore peerstore.Peerstore, wsStreamHandler StreamHandler) (*Service, error) {
 	// load stored peer ID, or make ephemeral peer ID
 	privKey, err := GetPrivKey(cfg, datadir)
 	if err != nil {
@@ -74,31 +72,28 @@ func MakeService(log logging.Logger, cfg config.Local, datadir string, pstore pe
 		libp2p.Transport(tcp.NewTCPTransport),
 		libp2p.Muxer("/yamux/1.0.0", &ymx),
 		libp2p.Peerstore(pstore),
-		libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/0"), // TODO configuration
-		// libp2p.ConnectionGater(), // TODO
+		libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/0"),
 	)
 	if err != nil {
 		return nil, err
 	}
 	log.Infof("P2P service started: peer ID %s addrs %s", h.ID(), h.Addrs())
 
-	sm := makeStreamManager(log, h, wsStreamHandler)
+	sm := makeStreamManager(ctx, log, h, wsStreamHandler)
 	h.Network().Notify(sm)
 	h.SetStreamHandler(AlgorandWsProtocol, sm.streamHandler)
 
-	psCtx := context.TODO()
-	ps, err := makePubSub(psCtx, cfg, h)
+	ps, err := makePubSub(ctx, cfg, h)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Service{
 		log:       log,
-		privKey:   privKey,
 		host:      h,
 		streams:   sm,
 		pubsub:    ps,
-		pubsubCtx: psCtx,
+		pubsubCtx: ctx,
 		topics:    make(map[string]*pubsub.Topic),
 	}, nil
 }
@@ -118,7 +113,7 @@ func (s *Service) DialPeers(targetConnCount int) {
 	peerIDs := s.host.Peerstore().Peers()
 	for _, peerID := range peerIDs {
 		// if we are at our target count stop trying to connect
-		if len(s.host.Network().Conns()) >= targetConnCount {
+		if len(s.host.Network().Conns()) == targetConnCount {
 			return
 		}
 		// if we are already connected to this peer, skip it

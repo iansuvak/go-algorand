@@ -27,7 +27,6 @@ import (
 	"net/http"
 	"net/textproto"
 	"net/url"
-	"path"
 	"regexp"
 	"runtime"
 	"strconv"
@@ -853,7 +852,7 @@ func (wn *WebsocketNetwork) setup() {
 	wn.messagesOfInterestRefresh = make(chan struct{}, 2)
 	wn.messagesOfInterestGeneration = 1 // something nonzero so that any new wsPeer needs updating
 	if wn.relayMessages {
-		wn.RegisterMessageInterest(protocol.StateProofSigTag)
+		wn.registerMessageInterest(protocol.StateProofSigTag)
 	}
 }
 
@@ -2151,74 +2150,6 @@ var errBcastInvalidArray = errors.New("invalid broadcast array")
 
 var errBcastQFull = errors.New("broadcast queue full")
 
-var errURLNoHost = errors.New("could not parse a host from url")
-
-var errURLColonHost = errors.New("host name starts with a colon")
-
-// HostColonPortPattern matches "^[-a-zA-Z0-9.]+:\\d+$" e.g. "foo.com.:1234"
-var HostColonPortPattern = regexp.MustCompile("^[-a-zA-Z0-9.]+:\\d+$")
-
-// ParseHostOrURL handles "host:port" or a full URL.
-// Standard library net/url.Parse chokes on "host:port".
-func ParseHostOrURL(addr string) (*url.URL, error) {
-	// If the entire addr is "host:port" grab that right away.
-	// Don't try url.Parse() because that will grab "host:" as if it were "scheme:"
-	if HostColonPortPattern.MatchString(addr) {
-		return &url.URL{Scheme: "http", Host: addr}, nil
-	}
-	parsed, err := url.Parse(addr)
-	if err == nil {
-		if parsed.Host == "" {
-			return nil, errURLNoHost
-		}
-		return parsed, nil
-	}
-	if strings.HasPrefix(addr, "http:") || strings.HasPrefix(addr, "https:") || strings.HasPrefix(addr, "ws:") || strings.HasPrefix(addr, "wss:") || strings.HasPrefix(addr, "://") || strings.HasPrefix(addr, "//") {
-		return parsed, err
-	}
-	// This turns "[::]:4601" into "http://[::]:4601" which url.Parse can do
-	parsed, e2 := url.Parse("http://" + addr)
-	if e2 == nil {
-		// https://datatracker.ietf.org/doc/html/rfc1123#section-2
-		// first character is relaxed to allow either a letter or a digit
-		if parsed.Host[0] == ':' && (len(parsed.Host) < 2 || parsed.Host[1] != ':') {
-			return nil, errURLColonHost
-		}
-		return parsed, nil
-	}
-	return parsed, err /* return original err, not our prefix altered try */
-}
-
-// ParseHostOrURLOrMultiaddr returns an error if it could not parse the provided
-// string as a valid "host:port", full URL, or multiaddr. If no error, it returns
-// a host:port address, or a multiaddr.
-func ParseHostOrURLOrMultiaddr(addr string) (string, error) {
-	if strings.HasPrefix(addr, "/") { // multiaddr starts with '/'
-		_, err := multiaddr.NewMultiaddr(addr)
-		return addr, err
-	}
-	url, err := ParseHostOrURL(addr)
-	if err != nil {
-		return "", err
-	}
-	return url.Host, nil
-}
-
-// addrToGossipAddr parses host:port or a URL and returns the URL to the websocket interface at that address.
-func (wn *WebsocketNetwork) addrToGossipAddr(addr string) (string, error) {
-	parsedURL, err := ParseHostOrURL(addr)
-	if err != nil {
-		wn.log.Warnf("could not parse addr %#v: %s", addr, err)
-		return "", errBadAddr
-	}
-	parsedURL.Scheme = websocketsScheme[parsedURL.Scheme]
-	if parsedURL.Scheme == "" {
-		parsedURL.Scheme = "ws"
-	}
-	parsedURL.Path = strings.Replace(path.Join(parsedURL.Path, GossipNetworkPath), "{genesisID}", wn.GenesisID, -1)
-	return parsedURL.String(), nil
-}
-
 // tryConnectReserveAddr synchronously checks that addr is not already being connected to, returns (websocket URL or "", true if connection may proceed)
 func (wn *WebsocketNetwork) tryConnectReserveAddr(addr string) (gossipAddr string, ok bool) {
 	wn.tryConnectLock.Lock()
@@ -2492,9 +2423,8 @@ func (wn *WebsocketNetwork) SetPeerData(peer Peer, key string, value interface{}
 func NewWebsocketNetwork(log logging.Logger, config config.Local, phonebookAddresses []string, genesisID string, networkID protocol.NetworkID, nodeInfo NodeInfo) (wn *WebsocketNetwork, err error) {
 	phonebook := MakePhonebook(config.ConnectionsRateLimitingCount,
 		time.Duration(config.ConnectionsRateLimitingWindowSeconds)*time.Second)
-	// In case we have a mix of multi-addrs and host:ip strings, try converting any valid mutliaddrs before creating the phonebook
 	phonebookAddresses = multiAddrsToIPPorts(phonebookAddresses)
-	phonebook.ReplacePeerList(phonebookAddresses, string(networkID), PhoneBookEntryRelayRole)
+	phonebook.AddPersistentPeers(phonebookAddresses, string(networkID), PhoneBookEntryRelayRole)
 	wn = &WebsocketNetwork{
 		log:               log,
 		config:            config,
@@ -2666,12 +2596,12 @@ func SetUserAgentHeader(header http.Header) {
 	header.Set(UserAgentHeader, ua)
 }
 
-// RegisterMessageInterest notifies the network library that this node
+// registerMessageInterest notifies the network library that this node
 // wants to receive messages with the specified tag.  This will cause
 // this node to send corresponding MsgOfInterest notifications to any
 // newly connecting peers.  This should be called before the network
 // is started.
-func (wn *WebsocketNetwork) RegisterMessageInterest(t protocol.Tag) {
+func (wn *WebsocketNetwork) registerMessageInterest(t protocol.Tag) {
 	wn.messagesOfInterestMu.Lock()
 	defer wn.messagesOfInterestMu.Unlock()
 
@@ -2722,7 +2652,7 @@ func (wn *WebsocketNetwork) postMessagesOfInterestThread() {
 		wantTXGossip := wn.nodeInfo.IsParticipating()
 		if wantTXGossip && (wn.wantTXGossip != wantTXGossipYes) {
 			wn.log.Infof("postMessagesOfInterestThread: enabling TX gossip")
-			wn.RegisterMessageInterest(protocol.TxnTag)
+			wn.registerMessageInterest(protocol.TxnTag)
 			atomic.StoreUint32(&wn.wantTXGossip, wantTXGossipYes)
 		} else if !wantTXGossip && (wn.wantTXGossip != wantTXGossipNo) {
 			wn.log.Infof("postMessagesOfInterestThread: disabling TX gossip")

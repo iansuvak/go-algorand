@@ -2866,7 +2866,7 @@ func TestWebsocketNetworkMessageOfInterest(t *testing.T) {
 	// have netB asking netA to send it ft2, deregister ping handler to make sure that we aren't exceeding the maximum MOI messagesize
 	// Max MOI size is calculated by encoding all of the valid tags, since we are using a custom tag here we must deregister one in the default set.
 	netB.DeregisterMessageInterest(protocol.PingTag)
-	netB.RegisterMessageInterest(ft2)
+	netB.registerMessageInterest(ft2)
 
 	netB.Start()
 	defer netStop(t, netB, "B")
@@ -2918,7 +2918,7 @@ func TestWebsocketNetworkMessageOfInterest(t *testing.T) {
 	waitReady(t, netB, readyTimeout.C)
 
 	// have netB asking netA to send it only AgreementVoteTag and ProposalPayloadTag
-	netB.RegisterMessageInterest(ft2)
+	netB.registerMessageInterest(ft2)
 	netB.DeregisterMessageInterest(ft1)
 	netB.DeregisterMessageInterest(ft3)
 	netB.DeregisterMessageInterest(ft4)
@@ -3635,67 +3635,6 @@ func BenchmarkVariableTransactionMessageBlockSizes(t *testing.B) {
 	}
 }
 
-type urlCase struct {
-	text string
-	out  url.URL
-}
-
-func TestParseHostOrURL(t *testing.T) {
-	partitiontest.PartitionTest(t)
-	urlTestCases := []urlCase{
-		{"localhost:123", url.URL{Scheme: "http", Host: "localhost:123"}},
-		{"http://localhost:123", url.URL{Scheme: "http", Host: "localhost:123"}},
-		{"ws://localhost:9999", url.URL{Scheme: "ws", Host: "localhost:9999"}},
-		{"wss://localhost:443", url.URL{Scheme: "wss", Host: "localhost:443"}},
-		{"https://localhost:123", url.URL{Scheme: "https", Host: "localhost:123"}},
-		{"https://somewhere.tld", url.URL{Scheme: "https", Host: "somewhere.tld"}},
-		{"http://127.0.0.1:123", url.URL{Scheme: "http", Host: "127.0.0.1:123"}},
-		{"//somewhere.tld", url.URL{Scheme: "", Host: "somewhere.tld"}},
-		{"//somewhere.tld:4601", url.URL{Scheme: "", Host: "somewhere.tld:4601"}},
-		{"http://[::]:123", url.URL{Scheme: "http", Host: "[::]:123"}},
-		{"1.2.3.4:123", url.URL{Scheme: "http", Host: "1.2.3.4:123"}},
-		{"[::]:123", url.URL{Scheme: "http", Host: "[::]:123"}},
-		{"r2-devnet.devnet.algodev.network:4560", url.URL{Scheme: "http", Host: "r2-devnet.devnet.algodev.network:4560"}},
-		{"::11.22.33.44:123", url.URL{Scheme: "http", Host: "::11.22.33.44:123"}},
-	}
-	badUrls := []string{
-		"justahost",
-		"localhost:WAT",
-		"http://localhost:WAT",
-		"https://localhost:WAT",
-		"ws://localhost:WAT",
-		"wss://localhost:WAT",
-		"//localhost:WAT",
-		"://badaddress", // See rpcs/blockService_test.go TestRedirectFallbackEndpoints
-		"://localhost:1234",
-		":xxx",
-		":xxx:1234",
-		"::11.22.33.44",
-		":a:1",
-		":a:",
-		":1",
-		":a",
-		":",
-		"",
-	}
-	for _, tc := range urlTestCases {
-		t.Run(tc.text, func(t *testing.T) {
-			v, err := ParseHostOrURL(tc.text)
-			require.NoError(t, err)
-			if tc.out != *v {
-				t.Errorf("url wanted %#v, got %#v", tc.out, v)
-				return
-			}
-		})
-	}
-	for _, addr := range badUrls {
-		t.Run(addr, func(t *testing.T) {
-			_, err := ParseHostOrURL(addr)
-			require.Error(t, err, "url should fail", addr)
-		})
-	}
-}
-
 func TestPreparePeerData(t *testing.T) {
 	partitiontest.PartitionTest(t)
 
@@ -4308,6 +4247,40 @@ func TestUpdatePhonebookAddresses(t *testing.T) {
 	})
 }
 
+func TestUpdatePhonebookAddressesPersistentPeers(t *testing.T) {
+	partitiontest.PartitionTest(t)
+
+	rapid.Check(t, func(t1 *rapid.T) {
+		nw := makeTestWebsocketNode(t)
+		// Generate a new set of relay domains
+		// Dont overlap with archive nodes previously specified, duplicates between them not stored in phonebook as of this writing
+		relayDomainsGen := rapid.SliceOfN(rapidgen.DomainOf(253, 63, "", nil), 0, 200)
+		relayDomains := relayDomainsGen.Draw(t1, "relayDomains")
+
+		var persistentPeers []string
+		// Add an initial set of relay domains as Persistent Peers in the Phonebook,
+		persistentPeers = rapid.SliceOfN(rapidgen.DomainOf(253, 63, "", relayDomains), 0, 200).Draw(t1, "")
+		nw.phonebook.AddPersistentPeers(persistentPeers, string(nw.NetworkID), PhoneBookEntryRelayRole)
+
+		// run updatePhonebookAddresses
+		nw.updatePhonebookAddresses(relayDomains, nil)
+
+		// Check that entries are in fact in phonebook less any duplicates
+		dedupedRelayDomains := removeDuplicateStr(relayDomains, false)
+		require.Equal(t, 0, len(relayDomains)-len(dedupedRelayDomains))
+
+		relayPeers := nw.GetPeers(PeersPhonebookRelays)
+		require.Equal(t, len(dedupedRelayDomains)+len(persistentPeers), len(relayPeers))
+
+		relayAddrs := make([]string, 0, len(relayPeers))
+		for _, peer := range relayPeers {
+			relayAddrs = append(relayAddrs, peer.(HTTPPeer).GetAddress())
+		}
+
+		require.ElementsMatch(t, append(dedupedRelayDomains, persistentPeers...), relayAddrs)
+	})
+}
+
 func removeDuplicateStr(strSlice []string, lowerCase bool) []string {
 	allKeys := make(map[string]bool)
 	var dedupStrSlice = make([]string, 0)
@@ -4376,30 +4349,6 @@ type MergeTestDNSInputs struct {
 
 func mergePrimarySecondaryRelayAddressListsPartialOverlapTestInputsGen() *rapid.Generator[*MergeTestDNSInputs] {
 
-	algorand0Base := rapid.Custom(func(t *rapid.T) *MergeTestDNSInputs {
-		//unused/satisfying rapid expectation
-		rapid.String().Draw(t, "algorand0Base")
-		// <network>.algorand.network?backup=<network>.algorand0.network&
-		//		dedup=<name>.(algorand-<network>|n-<network>.algorand0).network
-		return &MergeTestDNSInputs{
-			dedupExpStr:           "((algorand-<network>|n-<network>.algorand0).network)",
-			primaryDomainSuffix:   "algorand-<network>.network",
-			secondaryDomainSuffix: "n-<network>.algorand0.network",
-		}
-	})
-
-	algorand0Inverse := rapid.Custom(func(t *rapid.T) *MergeTestDNSInputs {
-		//unused/satisfying rapid expectation
-		rapid.String().Draw(t, "algorand0Inverse")
-		// <network>.algorand0.network?backup=<network>.algorand.network&
-		//		dedup=<name>.(algorand-<network>|n-<network>.algorand0).network
-		return &MergeTestDNSInputs{
-			dedupExpStr:           "((algorand-<network>|n-<network>.algorand0).network)",
-			primaryDomainSuffix:   "n-<network>.algorand0.network",
-			secondaryDomainSuffix: "algorand-<network>.network",
-		}
-	})
-
 	algorandNetBase := rapid.Custom(func(t *rapid.T) *MergeTestDNSInputs {
 		//unused/satisfying rapid expectation
 		rapid.String().Draw(t, "algorandNetBase")
@@ -4424,7 +4373,7 @@ func mergePrimarySecondaryRelayAddressListsPartialOverlapTestInputsGen() *rapid.
 		}
 	})
 
-	return rapid.OneOf(algorand0Base, algorand0Inverse, algorandNetBase, algorandNetInverse)
+	return rapid.OneOf(algorandNetBase, algorandNetInverse)
 }
 
 func TestMergePrimarySecondaryRelayAddressListsPartialOverlap(t *testing.T) {
@@ -4482,7 +4431,7 @@ func TestMergePrimarySecondaryRelayAddressListsNoDedupExp(t *testing.T) {
 
 		network := supportedNetworkGen().Draw(t1, "network")
 		primaryDomainSuffix := strings.Replace(
-			`n-<network>.algorand0.network`, "<network>", network, -1)
+			`algorand-<network>.net`, "<network>", network, -1)
 
 		// Generate hosts for a primary network domain
 		primaryNetworkDomainGen := rapidgen.DomainWithSuffixAndPort(primaryDomainSuffix, nil)

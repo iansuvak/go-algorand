@@ -132,7 +132,7 @@ func NewP2PNetwork(log logging.Logger, cfg config.Local, datadir string, phonebo
 		broadcastQueueBulk:     make(chan broadcastRequest, 100),
 	}
 
-	net.service, err = p2p.MakeService(log, cfg, datadir, pstore, net.wsStreamHandler)
+	net.service, err = p2p.MakeService(net.ctx, log, cfg, datadir, pstore, net.wsStreamHandler)
 	if err != nil {
 		return nil, err
 	}
@@ -208,13 +208,22 @@ func (n *P2PNetwork) GetGenesisID() string {
 
 // Address returns a string and whether that is a 'final' address or guessed.
 func (n *P2PNetwork) Address() (string, bool) {
-	addrs := n.service.Host().Addrs()
+	addrInfo := peer.AddrInfo{
+		ID:    n.service.Host().ID(),
+		Addrs: n.service.Host().Addrs(),
+	}
+	addrs, err := peer.AddrInfoToP2pAddrs(&addrInfo)
+	if err != nil {
+		n.log.Warnf("Failed to generate valid multiaddr: %v", err)
+		return "", false
+	}
 	if len(addrs) == 0 {
 		return "", false
 	}
 	if len(addrs) > 1 {
 		n.log.Infof("Multiple addresses found, using first one from %v", addrs)
 	}
+
 	return addrs[0].String(), true
 }
 
@@ -222,7 +231,7 @@ func (n *P2PNetwork) Address() (string, bool) {
 func (n *P2PNetwork) Broadcast(ctx context.Context, tag protocol.Tag, data []byte, wait bool, except Peer) error {
 	// For tags using pubsub topics, publish to GossipSub
 	if topic, ok := n.topicTags[tag]; ok {
-		return n.service.Publish(context.TODO(), topic, data)
+		return n.service.Publish(ctx, topic, data)
 	}
 	// Otherwise broadcast over websocket protocol stream
 	return n.broadcaster.BroadcastArray(ctx, []protocol.Tag{tag}, [][]byte{data}, wait, except)
@@ -230,7 +239,6 @@ func (n *P2PNetwork) Broadcast(ctx context.Context, tag protocol.Tag, data []byt
 
 // Relay message
 func (n *P2PNetwork) Relay(ctx context.Context, tag protocol.Tag, data []byte, wait bool, except Peer) error {
-	// TODO support disabling relaying, like wsNetwork does
 	return n.Broadcast(ctx, tag, data, wait, except)
 }
 
@@ -261,14 +269,12 @@ func (n *P2PNetwork) DisconnectPeers() {
 
 // RegisterHTTPHandler path accepts gorilla/mux path annotations
 func (n *P2PNetwork) RegisterHTTPHandler(path string, handler http.Handler) {
-	// TODO support HTTP requests for blocks & catchpoint snapshots
 }
 
 // RequestConnectOutgoing asks the system to actually connect to peers.
 // `replace` optionally drops existing connections before making new ones.
 // `quit` chan allows cancellation.
 func (n *P2PNetwork) RequestConnectOutgoing(replace bool, quit <-chan struct{}) {
-	// TODO catchup calls this to get more peers
 }
 
 // GetPeers returns a list of Peers we could potentially send a direct message to.
@@ -320,7 +326,7 @@ func (n *P2PNetwork) wsStreamHandler(ctx context.Context, peer peer.ID, stream n
 			return
 		}
 	} else {
-		_, err := stream.Write([]byte("1")) // TODO add header-like info to handshake
+		_, err := stream.Write([]byte("1"))
 		if err != nil {
 			n.log.Warnf("wsStreamHandler: error sending initial message: %s", err)
 			return
@@ -334,7 +340,7 @@ func (n *P2PNetwork) wsStreamHandler(ctx context.Context, peer peer.ID, stream n
 	}
 	// create a wsPeer for this stream and added it to the peers map.
 	wsp := &wsPeer{
-		wsPeerCore: makePeerCore(context.TODO(), n, n.log, n.handler.readBuffer, addr, n.GetRoundTripper(), addr),
+		wsPeerCore: makePeerCore(ctx, n, n.log, n.handler.readBuffer, addr, n.GetRoundTripper(), addr),
 		conn:       &wsPeerConnP2PImpl{stream: stream},
 	}
 	wsp.init(n.config, outgoingMessagesBufferSize)
@@ -403,8 +409,6 @@ func (n *P2PNetwork) txTopicHandleLoop() {
 			return
 		}
 
-		n.log.Infof("txTopicHandleLoop: received message from %s current ID: %s", msg.ReceivedFrom, n.service.Host().ID())
-
 		// discard TX message.
 		// from gossipsub's point of view, it's just waiting to hear back from the validator,
 		// and txHandler does all its work in the validator, so we don't need to do anything here
@@ -427,7 +431,7 @@ func (n *P2PNetwork) txTopicValidator(ctx context.Context, peerID peer.ID, msg *
 		return pubsub.ValidationAccept
 	}
 
-	n.peerStatsMu.Lock() // TODO this is just for testing right now
+	n.peerStatsMu.Lock()
 	peerStats, ok := n.peerStats[peerID]
 	if !ok {
 		n.peerStats[peerID] = &p2pPeerStats{txReceived: 1}
