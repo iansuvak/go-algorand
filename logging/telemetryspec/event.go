@@ -368,3 +368,15 @@ type BalancesAccountVacuumEventDetails struct {
 	// AfterVacuumSpaceBytes is the number of bytes used by the database after running the vacuuming process.
 	AfterVacuumSpaceBytes uint64
 }
+
+// PrunePeerEvent event
+const PrunePeerEvent Event = "PrunePeer"
+
+// GraftPeerEvent event
+const GraftPeerEvent Event = "GraftPeer"
+
+// P2PPeerEventDetails contains details for the PrunePeerEvent and GraftPeerEvent
+type P2PPeerEventDetails struct {
+	PeerID string
+	Topic  string
+}

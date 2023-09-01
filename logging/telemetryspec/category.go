@@ -39,3 +39,6 @@ const Network Category = "Network"
 
 // Transaction category
 const Transaction Category = "Transaction"
+
+// GossipSub category
+const GossipSub Category = "GossipSub"
