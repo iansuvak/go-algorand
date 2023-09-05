@@ -375,8 +375,12 @@ const PrunePeerEvent Event = "PrunePeer"
 // GraftPeerEvent event
 const GraftPeerEvent Event = "GraftPeer"
 
-// P2PPeerEventDetails contains details for the PrunePeerEvent and GraftPeerEvent
-type P2PPeerEventDetails struct {
+// P2PPeerTopicEvent contains details for the PrunePeerEvent and GraftPeerEvent
+type P2PPeerTopicEvent struct {
 	PeerID string
 	Topic  string
+}
+
+type P2PPeerDetails struct {
+	PeerID string
 }

@@ -20,17 +20,21 @@ import (
 	"github.com/algorand/go-algorand/logging"
 	"github.com/algorand/go-algorand/logging/telemetryspec"
 	"github.com/algorand/go-algorand/util/metrics"
+	"github.com/algorand/go-deadlock"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
 )
 
-// This tracer is used to implement metrics collection for messages received
-// and broadcasted through gossipsub.
+// gossipTracer implements pubsub.RawTracer interface
+// these events are called from pubsub internals and are synchronous
 type gossipTracer struct {
 	host host.Host
 	log  logging.Logger
+
+	peerDetails     map[peer.ID]telemetryspec.P2PPeerDetails
+	peerDetailsLock deadlock.RWMutex
 }
 
 var p2pAddPeer = metrics.MakeCounter(metrics.MetricName{Name: "algod_p2p_add_peer", Description: "Number of peers added"})
@@ -43,27 +47,39 @@ var p2pRejectMessage = metrics.MakeCounter(metrics.MetricName{Name: "algod_p2p_r
 var p2pDuplicateMessage = metrics.MakeCounter(metrics.MetricName{Name: "algod_p2p_duplicate_message", Description: "Number of duplicate messages filtered"})
 
 // AddPeer event
-func (g gossipTracer) AddPeer(p peer.ID, proto protocol.ID) {
+func (g *gossipTracer) AddPeer(p peer.ID, proto protocol.ID) {
 	p2pAddPeer.Inc(nil)
+	g.peerDetailsLock.Lock()
+	g.peerDetails[p] = telemetryspec.P2PPeerDetails{}
+	g.peerDetailsLock.Unlock()
 }
 
 // RemovePeer event
-func (g gossipTracer) RemovePeer(p peer.ID) {
+func (g *gossipTracer) RemovePeer(p peer.ID) {
 	p2pRemovePeer.Inc(nil)
+	g.peerDetailsLock.Lock()
+	details, ok := g.peerDetails[p]
+	delete(g.peerDetails, p)
+	g.peerDetailsLock.Unlock()
+	if !ok {
+		g.log.Warnf("Missing P2PPeerDetails for peer %s", p.String())
+	}
+	_ = details
+
 }
 
 // Join event is unimplemented for now
-func (g gossipTracer) Join(topic string) {
+func (g *gossipTracer) Join(topic string) {
 }
 
 // Leave event is unimplemented for now
-func (g gossipTracer) Leave(topic string) {
+func (g *gossipTracer) Leave(topic string) {
 }
 
 // Graft event
-func (g gossipTracer) Graft(p peer.ID, topic string) {
+func (g *gossipTracer) Graft(p peer.ID, topic string) {
 	p2pGraftPeer.Inc(nil)
-	details := telemetryspec.P2PPeerEventDetails{
+	details := telemetryspec.P2PPeerTopicEvent{
 		PeerID: p.String(),
 		Topic:  topic,
 	}
@@ -71,51 +87,58 @@ func (g gossipTracer) Graft(p peer.ID, topic string) {
 }
 
 // Prune event
-func (g gossipTracer) Prune(p peer.ID, topic string) {
+func (g *gossipTracer) Prune(p peer.ID, topic string) {
 	p2pPrunePeer.Inc(nil)
-	details := telemetryspec.P2PPeerEventDetails{
+	g.peerDetailsLock.RLock()
+	details, ok := g.peerDetails[p]
+	if !ok {
+		g.log.Warnf("Missing P2PPeerDetails for peer %s", p.String())
+	}
+	g.peerDetailsLock.RUnlock()
+	event := telemetryspec.P2PPeerTopicEvent{
 		PeerID: p.String(),
 		Topic:  topic,
 	}
-	g.log.EventWithDetails(telemetryspec.GossipSub, telemetryspec.PrunePeerEvent, details)
+	g.log.EventWithDetails(telemetryspec.GossipSub, telemetryspec.PrunePeerEvent, event)
 }
 
 // ValidateMessage event
-func (g gossipTracer) ValidateMessage(msg *pubsub.Message) {
+func (g *gossipTracer) ValidateMessage(msg *pubsub.Message) {
 	p2pValidateMessage.Inc(nil)
+
 }
 
 // DeliverMessage event
-func (g gossipTracer) DeliverMessage(msg *pubsub.Message) {
+func (g *gossipTracer) DeliverMessage(msg *pubsub.Message) {
 	p2pDeliverMessage.Inc(nil)
 }
 
 // RejectMessage event
-func (g gossipTracer) RejectMessage(msg *pubsub.Message, reason string) {
+func (g *gossipTracer) RejectMessage(msg *pubsub.Message, reason string) {
 	p2pRejectMessage.Inc(nil)
 }
 
 // DuplicateMessage event is unimplemented for now
-func (g gossipTracer) DuplicateMessage(msg *pubsub.Message) {
+func (g *gossipTracer) DuplicateMessage(msg *pubsub.Message) {
 	p2pDuplicateMessage.Inc(nil)
 }
 
 // UndeliverableMessage event is unimplemented for now
-func (g gossipTracer) UndeliverableMessage(msg *pubsub.Message) {
+func (g *gossipTracer) UndeliverableMessage(msg *pubsub.Message) {
 }
 
 // ThrottlePeer event is unimplemented for now
-func (g gossipTracer) ThrottlePeer(p peer.ID) {
+func (g *gossipTracer) ThrottlePeer(p peer.ID) {
 }
 
 // RecvRPC event is unimplemented for now
-func (g gossipTracer) RecvRPC(rpc *pubsub.RPC) {
+func (g *gossipTracer) RecvRPC(rpc *pubsub.RPC) {
 }
 
 // SendRPC event is unimplemented for now
-func (g gossipTracer) SendRPC(rpc *pubsub.RPC, p peer.ID) {
+func (g *gossipTracer) SendRPC(rpc *pubsub.RPC, p peer.ID) {
 }
 
 // DropRPC event is unimplemented for now
-func (g gossipTracer) DropRPC(rpc *pubsub.RPC, p peer.ID) {
+func (g *gossipTracer) DropRPC(rpc *pubsub.RPC, p peer.ID) {
 }
